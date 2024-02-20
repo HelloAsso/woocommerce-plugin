@@ -34,19 +34,15 @@ function refresh_token_asso() {
             'refresh_token' => $helloasso_refresh_token_asso
         );
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        $response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
 
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        if ($response === false) {
+        if (is_wp_error($response)) {
             return null;
         }
 
-        $data = json_decode($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $data = json_decode($response_body);
+
         if (isset($data->access_token)) {
             update_option('helloasso_access_token_asso', $data->access_token);
             update_option('helloasso_refresh_token_asso', $data->refresh_token);
