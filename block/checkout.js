@@ -1,17 +1,17 @@
-const settings = window.wc.wcSettings.getSetting( 'helloasso_data', {} );
-const label = window.wp.htmlEntities.decodeEntities( settings.title ) || window.wp.i18n.__( 'Helloasso', 'wc-helloasso' );
+const settings = window.wc.wcSettings.getSetting('helloasso_data', {});
+const label = window.wp.htmlEntities.decodeEntities(settings.title) || window.wp.i18n.__('Helloasso', 'wc-helloasso');
 const Content = () => {
-    return window.wp.htmlEntities.decodeEntities( settings.description || '' );
+    return window.wp.htmlEntities.decodeEntities(settings.description || '');
 };
 const Block_Gateway = {
     name: 'helloasso',
     label: label,
-    content: Object( window.wp.element.createElement )( Content, null ),
-    edit: Object( window.wp.element.createElement )( Content, null ),
+    content: Object(window.wp.element.createElement)(Content, null),
+    edit: Object(window.wp.element.createElement)(Content, null),
     canMakePayment: () => true,
     ariaLabel: label,
     supports: {
         features: settings.supports,
     },
 };
-window.wc.wcBlocksRegistry.registerPaymentMethod( Block_Gateway );
+window.wc.wcBlocksRegistry.registerPaymentMethod(Block_Gateway);

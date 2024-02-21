@@ -2,7 +2,7 @@
 
 function helloasso_generate_pkce()
 {
-    $randomBytes = random_bytes(32); 
+    $randomBytes = random_bytes(32);
     $codeVerifier = bin2hex($randomBytes);
 
     if (get_option('helloasso_code_verifier')) {

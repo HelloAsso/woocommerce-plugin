@@ -7,7 +7,7 @@ add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 
 function helloasso_endpoint()
 {
-  
+
     if (!wp_verify_nonce($_GET['nonce'], 'helloasso_connect_return')) {
         wp_redirect(get_site_url());
         exit;
@@ -55,13 +55,13 @@ function helloasso_endpoint()
     );
 
 
-    $response = wp_remote_post( $url, helloasso_get_args_post_urlencode($data) );
+    $response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
 
     if (is_wp_error($response)) {
         wp_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
         exit;
     }
-    
+
 
     $response_body = wp_remote_retrieve_body($response);
     $data = json_decode($response_body);
@@ -115,7 +115,6 @@ function helloasso_endpoint()
 
     exit;
 }
-
 
 
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');

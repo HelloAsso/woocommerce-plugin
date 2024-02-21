@@ -1,4 +1,4 @@
-<?php 
+<?php
 function get_oauth_token($client_id, $client_secret, $api_url)
 {
 

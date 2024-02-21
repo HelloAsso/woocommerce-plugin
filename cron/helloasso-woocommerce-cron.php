@@ -9,7 +9,8 @@ if (!wp_next_scheduled('cron_refresh_token_hello_asso__hook')) {
     wp_schedule_event(strtotime('00:00:00'), 'daily', 'cron_refresh_token_hello_asso__hook');
 }
 
-function refresh_token_asso() {
+function refresh_token_asso()
+{
     $helloasso_refresh_token_asso = get_option('helloasso_refresh_token_asso');
 
     $isInTestMode = get_option('helloasso_testmode');

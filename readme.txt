@@ -1,4 +1,4 @@
-=== HelloAsso Paiements pour WooCommerce ===
+=== HelloAsso Payments for WooCommerce ===
 Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
@@ -10,12 +10,12 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 
-L’extension **HelloAsso Paiements pour WooCommerce**, votre **solution de paiement gratuite** pour 
+L’extension **HelloAsso Payments for WooCommerce**, votre **solution de paiement gratuite** pour
 votre boutique.
 
 == Gratuite, simple et intégrée ==
 
-L’extension **HelloAsso Paiements pour WooCommerce** vous permet d’ajouter HelloAsso comme 
+L’extension **HelloAsso Payments for WooCommerce** vous permet d’ajouter HelloAsso comme
 moyen de paiement sur votre boutique. Une fois votre compte HelloAsso lié, vos 
 paiements seront réalisés gratuitement par HelloAsso (sans frais et sans commission pour votre 
 association) et vous pourrez suivre votre activité directement depuis votre compte HelloAsso.

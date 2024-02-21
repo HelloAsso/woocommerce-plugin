@@ -26,8 +26,8 @@ function declare_cart_checkout_blocks_compatibility()
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
     }
 }
-add_action('before_woocommerce_init', 'declare_cart_checkout_blocks_compatibility');
 
+add_action('before_woocommerce_init', 'declare_cart_checkout_blocks_compatibility');
 
 
 add_action('woocommerce_blocks_loaded', 'helloasso_register_order_approval_payment_method_type');
@@ -49,9 +49,6 @@ function helloasso_register_order_approval_payment_method_type()
         }
     );
 }
-
-
-
 
 
 /*
@@ -125,7 +122,6 @@ function helloasso_init_gateway_class()
             $this->supports = array(
                 'products'
             );
-
 
 
             $this->init_form_fields();
@@ -336,43 +332,42 @@ function helloasso_init_gateway_class()
 
             $this->form_fields = array(
                 'enabled' => array(
-                    'title'       => 'Activer/Désactiver',
-                    'label'       => 'Activer HelloAsso',
-                    'type'        => 'checkbox',
+                    'title' => 'Activer/Désactiver',
+                    'label' => 'Activer HelloAsso',
+                    'type' => 'checkbox',
                     'description' => '',
-                    'default'     => 'no'
+                    'default' => 'no'
                 ),
                 'title' => array(
-                    'title'       => 'Titre',
-                    'type'        => 'text',
+                    'title' => 'Titre',
+                    'type' => 'text',
                     'description' => 'Le titre du moyen de paiement qui s\'affichera pendant le checkout.',
-                    'default'     => 'Payer par carte bancaire avec HelloAsso',
+                    'default' => 'Payer par carte bancaire avec HelloAsso',
                     'custom_attributes' => array(
                         'readonly' => 'readonly'
                     ),
-                    'desc_tip'    => true,
+                    'desc_tip' => true,
                 ),
                 'description' => array(
-                    'title'       => 'Description',
-                    'type'        => 'textarea',
+                    'title' => 'Description',
+                    'type' => 'textarea',
                     'description' => 'La description du moyen de paiement qui s\'affichera pendant le checkout.',
-                    'default'     => "HelloAsso prend en charge les frais de transaction : 100% de votre paiement sera versé à l'association choisie. Vous pouvez laisser une contribution volontaire à HelloAsso lors de la prochaine étape de paiement : cela représente leur seule source de revenus.",
+                    'default' => "HelloAsso prend en charge les frais de transaction : 100% de votre paiement sera versé à l'association choisie. Vous pouvez laisser une contribution volontaire à HelloAsso lors de la prochaine étape de paiement : cela représente leur seule source de revenus.",
                     'custom_attributes' => array(
                         'readonly' => 'readonly'
                     )
                 ),
                 'testmode' => array(
-                    'title'       => 'Test mode',
-                    'label'       => 'Activer le mode test',
-                    'type'        => 'checkbox',
+                    'title' => 'Test mode',
+                    'label' => 'Activer le mode test',
+                    'type' => 'checkbox',
                     'description' => 'Activer le mode test pour le paiement HelloAsso.',
-                    'default'     => 'yes',
-                    'desc_tip'    => true,
+                    'default' => 'yes',
+                    'desc_tip' => true,
                 ),
 
             );
         }
-
 
 
         public function process_admin_options()
@@ -430,7 +425,7 @@ function helloasso_init_gateway_class()
             $return_url = get_site_url() . '/wc-api/helloasso?nonce=' . $nonce;
             $redirect_uri_encode = urlencode($return_url);
 
-            $code_challenge =  helloasso_generate_pkce();
+            $code_challenge = helloasso_generate_pkce();
             $state = bin2hex(random_bytes(32));
 
             if (get_option('hello_asso_state')) {
@@ -447,7 +442,6 @@ function helloasso_init_gateway_class()
         }
 
 
-
         public function payment_fields()
         {
 
@@ -459,9 +453,6 @@ function helloasso_init_gateway_class()
                 echo '</div>';
             }
         }
-
-
-
 
 
         public function validate_fields()
@@ -560,7 +551,6 @@ function helloasso_init_gateway_class()
         }
 
 
-
         public function process_payment($order_id)
         {
             refresh_token_asso();
@@ -576,7 +566,6 @@ function helloasso_init_gateway_class()
                 $company = $order->get_billing_company();
             } else {
                 if (isset($_POST['billing_first_name'])) { // phpcs:ignore WordPress.Security.NonceVerification
-
 
 
                     $firstName = sanitize_text_field($_POST['billing_first_name']); // phpcs:ignore WordPress.Security.NonceVerification
@@ -635,7 +624,7 @@ function helloasso_init_gateway_class()
                 "containsDonation" => true,
                 "payer" => array(
                     "firstName" => $firstName,
-                    "lastName" =>  $lastName,
+                    "lastName" => $lastName,
                     "email" => $email,
                     "address" => $adress,
                     "city" => $city,
@@ -662,24 +651,23 @@ function helloasso_init_gateway_class()
             }
 
             $url = $api_url . "v5/organizations/" . get_option('helloasso_organization_slug') . "/checkout-intents";
-            
+
             $response = wp_remote_post($url, helloasso_get_args_post_token($data, $bearerToken));
-           
+
 
             if (is_wp_error($response)) {
                 echo "Erreur : " . esc_html($response->get_error_message());
             }
 
 
-
             $response_body = wp_remote_retrieve_body($response);
 
             return array(
-                'result'   => 'success',
+                'result' => 'success',
                 'redirect' => json_decode($response_body)->redirectUrl
             );
         }
 
- 
+
     }
 }
