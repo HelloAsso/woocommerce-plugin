@@ -450,7 +450,8 @@ function helloasso_init_gateway_class()
 
 			add_option('hello_asso_authorization_url', $authorization_url);
 
-			wp_safe_redirect($authorization_url);
+			wp_redirect($authorization_url);
+			exit;
 		}
 
 
