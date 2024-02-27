@@ -13,7 +13,7 @@ function refresh_token_asso() {
 
 	$isInTestMode = get_option('helloasso_testmode');
 
-	if ($isInTestMode === 'yes') {
+	if ('yes' === $isInTestMode) {
 		$client_id = HELLOASSO_WOOCOMMERCE_CLIENT_ID_TEST;
 		$client_secret = HELLOASSO_WOOCOMMERCE_CLIENT_SECRET_TEST;
 		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
