@@ -584,49 +584,49 @@ function helloasso_init_gateway_class() {
 						wc_add_notice('Nonce pas ok', 'error');
 					}
 
-					if(isset($_POST['billing_first_name'])) {
+					if (isset($_POST['billing_first_name'])) {
 						$firstName = sanitize_text_field($_POST['billing_first_name']); 
 					} else {
-						$firstName = "";
+						$firstName = '';
 					}
 
-					if(isset($_POST['billing_last_name'])) {
+					if (isset($_POST['billing_last_name'])) {
 						$lastName = sanitize_text_field($_POST['billing_last_name']); 
 					} else {
-						$lastName = "";
+						$lastName = '';
 					}
 
-					if(isset($_POST['billing_email'])) {
+					if (isset($_POST['billing_email'])) {
 						$email = sanitize_text_field($_POST['billing_email']); 
 					} else {
-						$email = "";
+						$email = '';
 					}
 
-					if(isset($_POST['billing_address_1'])) {
+					if (isset($_POST['billing_address_1'])) {
 						$adress = sanitize_text_field($_POST['billing_address_1']); 
 					} else {
-						$adress = "";
+						$adress = '';
 					}
 
-					if(isset($_POST['billing_city'])) {
+					if (isset($_POST['billing_city'])) {
 						$city = sanitize_text_field($_POST['billing_city']); 
 					} else {
-						$city = "";
+						$city = '';
 					}
 
-					if(isset($_POST['billing_postcode'])) {
+					if (isset($_POST['billing_postcode'])) {
 						$zipCode = sanitize_text_field($_POST['billing_postcode']);
 					} else {
-						$zipCode = "";
+						$zipCode = '';
 					}
 
-					if(isset($_POST['billing_country'])) {
+					if (isset($_POST['billing_country'])) {
 						$countryIso = helloasso_convert_country_code(sanitize_text_field($_POST['billing_country'])); 
 					} else {
 						$countryIso = '';
 					}
 
-					if(isset($_POST['billing_company'])) {
+					if (isset($_POST['billing_company'])) {
 						$company = sanitize_text_field($_POST['billing_company']);
 					} else {
 						$company = '';
