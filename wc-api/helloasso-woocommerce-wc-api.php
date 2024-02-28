@@ -10,7 +10,7 @@ function helloasso_endpoint() {
 	if (isset($_GET['nonce'])) {
 		$nonce = sanitize_text_field($_GET['nonce']);
 		if (wp_verify_nonce($nonce, 'helloasso_connect_return')) {
-			$nonceRequest = $_GET['nonce'];
+			$nonceRequest = $nonce;
 		} else {
 			wp_safe_redirect(get_site_url());
 			exit;
