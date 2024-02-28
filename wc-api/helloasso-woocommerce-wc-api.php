@@ -5,8 +5,7 @@
 
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 
-function helloasso_endpoint()
-{
+function helloasso_endpoint() {
 
 	if (isset($_GET['nonce'])) {
 		$nonce = sanitize_text_field($_GET['nonce']);
@@ -126,8 +125,7 @@ function helloasso_endpoint()
 
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
 
-function helloasso_endpoint_deco()
-{
+function helloasso_endpoint_deco() {
 	delete_option('helloasso_access_token');
 	delete_option('helloasso_refresh_token');
 	delete_option('helloasso_token_expires_in');
@@ -148,8 +146,7 @@ function helloasso_endpoint_deco()
 
 add_action('woocommerce_api_helloasso_webhook', 'helloasso_endpoint_webhook');
 
-function helloasso_endpoint_webhook()
-{
+function helloasso_endpoint_webhook() {
 	$data = json_decode(file_get_contents('php://input'), true);
 	add_option('helloasso_webhook_data', wp_json_encode($data));
 
@@ -211,8 +208,7 @@ function helloasso_endpoint_webhook()
 
 add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
 
-function helloasso_endpoint_order()
-{
+function helloasso_endpoint_order() {
 
 	if (isset($_GET['nonce'])) {
 		$nonce = sanitize_text_field($_GET['nonce']);
