@@ -460,10 +460,20 @@ function helloasso_init_gateway_class() {
 				return true;
 			}
 
-			if (isset($_POST['billing_first_name']) && isset($_POST['billing_last_name']) && isset($_POST['billing_email'])) { // phpcs:ignore WordPress.Security.NonceVerification
-				$firstName = sanitize_text_field($_POST['billing_first_name']); // phpcs:ignore WordPress.Security.NonceVerification
-				$lastName = sanitize_text_field($_POST['billing_last_name']); // phpcs:ignore WordPress.Security.NonceVerification
-				$email = sanitize_text_field($_POST['billing_email']); // phpcs:ignore WordPress.Security.NonceVerification
+	
+			if (isset($_POST['billing_first_name']) && isset($_POST['billing_last_name']) && isset($_POST['billing_email'])) { 
+				if (isset($_POST['woocommerce-process-checkout-nonce'])) {
+					$nonce = sanitize_text_field($_POST['woocommerce-process-checkout-nonce']);
+					if (!wp_verify_nonce($nonce, 'woocommerce-process_checkout')) {
+						wc_add_notice('Le nonce est pas ok', 'error');
+					}
+				} else {
+					wc_add_notice('Nonce pas ok', 'error');
+				}
+
+				$firstName = sanitize_text_field($_POST['billing_first_name']);
+				$lastName = sanitize_text_field($_POST['billing_last_name']); 
+				$email = sanitize_text_field($_POST['billing_email']); 
 			} else {
 				// GET request payload json
 				$json = file_get_contents('php://input');
@@ -563,16 +573,64 @@ function helloasso_init_gateway_class() {
 				$countryIso = helloasso_convert_country_code($order->get_billing_country());
 				$company = $order->get_billing_company();
 			} else {
-				if (isset($_POST['billing_first_name'])) { // phpcs:ignore WordPress.Security.NonceVerification
+				if (isset($_POST['billing_first_name'])) { 
 
-					$firstName = $order->get_billing_first_name();
-					$lastName = $order->get_billing_last_name();
-					$email = $order->get_billing_email();
-					$adress = $order->get_billing_address_1();
-					$city = $order->get_billing_city();
-					$zipCode = $order->get_billing_postcode();
-					$countryIso = helloasso_convert_country_code($order->get_billing_country());
-					$company = $order->get_billing_company();
+					if (isset($_POST['woocommerce-process-checkout-nonce'])) {
+						$nonce = sanitize_text_field($_POST['woocommerce-process-checkout-nonce']);
+						if (!wp_verify_nonce($nonce, 'woocommerce-process_checkout')) {
+							wc_add_notice('Le nonce est pas ok', 'error');
+						}
+					} else {
+						wc_add_notice('Nonce pas ok', 'error');
+					}
+
+					if(isset($_POST['billing_first_name'])) {
+						$firstName = sanitize_text_field($_POST['billing_first_name']); 
+					} else {
+						$firstName = "";
+					}
+
+					if(isset($_POST['billing_last_name'])) {
+						$lastName = sanitize_text_field($_POST['billing_last_name']); 
+					} else {
+						$lastName = "";
+					}
+
+					if(isset($_POST['billing_email'])) {
+						$email = sanitize_text_field($_POST['billing_email']); 
+					} else {
+						$email = "";
+					}
+
+					if(isset($_POST['billing_address_1'])) {
+						$adress = sanitize_text_field($_POST['billing_address_1']); 
+					} else {
+						$adress = "";
+					}
+
+					if(isset($_POST['billing_city'])) {
+						$city = sanitize_text_field($_POST['billing_city']); 
+					} else {
+						$city = "";
+					}
+
+					if(isset($_POST['billing_postcode'])) {
+						$zipCode = sanitize_text_field($_POST['billing_postcode']);
+					} else {
+						$zipCode = "";
+					}
+
+					if(isset($_POST['billing_country'])) {
+						$countryIso = helloasso_convert_country_code(sanitize_text_field($_POST['billing_country'])); 
+					} else {
+						$countryIso = '';
+					}
+
+					if(isset($_POST['billing_company'])) {
+						$company = sanitize_text_field($_POST['billing_company']);
+					} else {
+						$company = '';
+					}
 					
 				} else {
 					$json = file_get_contents('php://input');
