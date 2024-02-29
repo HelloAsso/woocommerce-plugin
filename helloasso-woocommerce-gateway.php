@@ -136,8 +136,6 @@ function helloasso_init_gateway_class() {
 			}
 
 
-
-
 			if (isset($_GET['nonce'])) {
 				$nonce = sanitize_text_field($_GET['nonce']);
 				if (wp_verify_nonce($nonce, 'helloasso_connect')) {
@@ -159,7 +157,6 @@ function helloasso_init_gateway_class() {
 					}
 				}
 			}
-
 
 
 			echo '<h3>' . esc_html($this->method_title) . '</h3>';
@@ -262,7 +259,12 @@ function helloasso_init_gateway_class() {
 
 			if ($isConnected) {
 				$organizationName = get_option('helloasso_organization_slug');
-				echo '<p><strong>Connecté avec ' . esc_html($organizationName) . ' en mode ' . ( $this->get_option('testmode') === 'yes' ? 'test' : 'production' ) . '</strong></p>';
+				$environment = ($this->get_option('testmode') === 'yes' ? '-sandbox' : '');
+				$mode = $this->get_option('testmode') === 'yes' ? 'test' : 'production';
+				$url = "https://admin.helloasso{$environment}.com/" . esc_html($organizationName) . "/accueil";
+
+				echo "<p><strong>Connecté avec <a href='{$url}'>" . esc_html($organizationName) . "</a> en mode {$mode}</strong></p>";
+
 				echo '<a href="javascript:void(0)" id="decoHelloAsso">Se déconnecter de mon asso </a>';
 			}
 			$mode = get_option('helloasso_testmode');
@@ -457,8 +459,8 @@ function helloasso_init_gateway_class() {
 				return true;
 			}
 
-	
-			if (isset($_POST['billing_first_name']) && isset($_POST['billing_last_name']) && isset($_POST['billing_email'])) { 
+
+			if (isset($_POST['billing_first_name']) && isset($_POST['billing_last_name']) && isset($_POST['billing_email'])) {
 				if (isset($_POST['woocommerce-process-checkout-nonce'])) {
 					$nonce = sanitize_text_field($_POST['woocommerce-process-checkout-nonce']);
 					if (!wp_verify_nonce($nonce, 'woocommerce-process_checkout')) {
@@ -469,8 +471,8 @@ function helloasso_init_gateway_class() {
 				}
 
 				$firstName = sanitize_text_field($_POST['billing_first_name']);
-				$lastName = sanitize_text_field($_POST['billing_last_name']); 
-				$email = sanitize_text_field($_POST['billing_email']); 
+				$lastName = sanitize_text_field($_POST['billing_last_name']);
+				$email = sanitize_text_field($_POST['billing_email']);
 			} else {
 				// GET request payload json
 				$json = file_get_contents('php://input');
@@ -570,7 +572,7 @@ function helloasso_init_gateway_class() {
 				$countryIso = helloasso_convert_country_code($order->get_billing_country());
 				$company = $order->get_billing_company();
 			} else {
-				if (isset($_POST['billing_first_name'])) { 
+				if (isset($_POST['billing_first_name'])) {
 
 					if (isset($_POST['woocommerce-process-checkout-nonce'])) {
 						$nonce = sanitize_text_field($_POST['woocommerce-process-checkout-nonce']);
@@ -582,31 +584,31 @@ function helloasso_init_gateway_class() {
 					}
 
 					if (isset($_POST['billing_first_name'])) {
-						$firstName = sanitize_text_field($_POST['billing_first_name']); 
+						$firstName = sanitize_text_field($_POST['billing_first_name']);
 					} else {
 						$firstName = '';
 					}
 
 					if (isset($_POST['billing_last_name'])) {
-						$lastName = sanitize_text_field($_POST['billing_last_name']); 
+						$lastName = sanitize_text_field($_POST['billing_last_name']);
 					} else {
 						$lastName = '';
 					}
 
 					if (isset($_POST['billing_email'])) {
-						$email = sanitize_text_field($_POST['billing_email']); 
+						$email = sanitize_text_field($_POST['billing_email']);
 					} else {
 						$email = '';
 					}
 
 					if (isset($_POST['billing_address_1'])) {
-						$adress = sanitize_text_field($_POST['billing_address_1']); 
+						$adress = sanitize_text_field($_POST['billing_address_1']);
 					} else {
 						$adress = '';
 					}
 
 					if (isset($_POST['billing_city'])) {
-						$city = sanitize_text_field($_POST['billing_city']); 
+						$city = sanitize_text_field($_POST['billing_city']);
 					} else {
 						$city = '';
 					}
@@ -618,7 +620,7 @@ function helloasso_init_gateway_class() {
 					}
 
 					if (isset($_POST['billing_country'])) {
-						$countryIso = helloasso_convert_country_code(sanitize_text_field($_POST['billing_country'])); 
+						$countryIso = helloasso_convert_country_code(sanitize_text_field($_POST['billing_country']));
 					} else {
 						$countryIso = '';
 					}
@@ -628,7 +630,7 @@ function helloasso_init_gateway_class() {
 					} else {
 						$company = '';
 					}
-					
+
 				} else {
 					$json = file_get_contents('php://input');
 					$data = json_decode($json, true);
@@ -697,7 +699,7 @@ function helloasso_init_gateway_class() {
 			$bearerToken = get_option('helloasso_access_token_asso');
 			$isInTestMode = get_option('helloasso_testmode');
 
-			if ('yes' ===  $isInTestMode) {
+			if ('yes' === $isInTestMode) {
 				$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
 			} else {
 				$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
