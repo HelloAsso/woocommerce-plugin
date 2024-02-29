@@ -1,0 +1,4 @@
+*** HelloAsso Payments for WooCommerce Changelog ***
+
+2024-02-28 - version 1.0.0
+* Initial release

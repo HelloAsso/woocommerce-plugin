@@ -80,7 +80,6 @@ add_action('plugins_loaded', 'helloasso_init_gateway_class');
 
 
 register_deactivation_hook(__FILE__, 'helloasso_deactivate');
-
 function helloasso_deactivate() {
 	delete_option('helloasso_access_token');
 	delete_option('helloasso_refresh_token');
@@ -94,7 +93,6 @@ function helloasso_deactivate() {
 	delete_option('helloasso_refresh_token_asso');
 	delete_option('helloasso_token_expires_in_asso');
 	delete_option('helloasso_refresh_token_expires_in_asso');
-	delete_option('helloasso_organization_name');
 	delete_option('helloasso_webhook_url');
 	delete_option('helloasso_testmode');
 }
@@ -263,7 +261,7 @@ function helloasso_init_gateway_class() {
 
 
 			if ($isConnected) {
-				$organizationName = get_option('helloasso_organization_name');
+				$organizationName = get_option('helloasso_organization_slug');
 				echo '<p><strong>Connecté avec ' . esc_html($organizationName) . ' en mode ' . ( $this->get_option('testmode') === 'yes' ? 'test' : 'production' ) . '</strong></p>';
 				echo '<a href="javascript:void(0)" id="decoHelloAsso">Se déconnecter de mon asso </a>';
 			}
@@ -363,7 +361,7 @@ function helloasso_init_gateway_class() {
 					'label' => 'Activer le mode test',
 					'type' => 'checkbox',
 					'description' => 'Activer le mode test pour le paiement HelloAsso.',
-					'default' => 'yes',
+					'default' => 'false',
 					'desc_tip' => true,
 				),
 
@@ -408,7 +406,6 @@ function helloasso_init_gateway_class() {
 			delete_option('helloasso_refresh_token_asso');
 			delete_option('helloasso_token_expires_in_asso');
 			delete_option('helloasso_refresh_token_expires_in_asso');
-			delete_option('helloasso_organization_name');
 			delete_option('helloasso_webhook_url');
 
 			if (get_option('helloasso_testmode')) {

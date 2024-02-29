@@ -85,21 +85,6 @@ function helloasso_endpoint() {
 		add_option('helloasso_token_expires_in_asso', $data->expires_in);
 		add_option('helloasso_refresh_token_expires_in_asso', time() + 2629800);
 
-		$urlOrga = $api_url . 'v5/organizations/' . $data->organization_slug;
-		$responseOrga = wp_remote_get($urlOrga, helloasso_get_args_get_token($data->access_token));
-
-		if (is_wp_error($responseOrga)) {
-			wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
-			exit;
-		}
-
-		$dataOrga = json_decode(wp_remote_retrieve_body($responseOrga));
-
-		if (isset($dataOrga->name)) {
-			delete_option('helloasso_organization_name');
-			add_option('helloasso_organization_name', $dataOrga->name);
-		}
-
 		$urlNotif = $api_url . 'v5/partners/me/api-notifications/organizations/' . $data->organization_slug;
 
 		$dataNotifSend = array(
@@ -138,7 +123,6 @@ function helloasso_endpoint_deco() {
 	delete_option('helloasso_refresh_token_asso');
 	delete_option('helloasso_token_expires_in_asso');
 	delete_option('helloasso_refresh_token_expires_in_asso');
-	delete_option('helloasso_organization_name');
 	delete_option('helloasso_webhook_url');
 	echo wp_json_encode(array('success' => true, 'message' => 'Vous avez bien été déconnecté de votre compte HelloAsso'));
 	exit;

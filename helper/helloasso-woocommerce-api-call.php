@@ -18,26 +18,6 @@ function helloasso_get_args_post_urlencode($data) {
 	return $args;
 }
 
-function helloasso_get_args_post_urlencode_token($data, $token) {
-	$args = array(
-		'timeout' => 45, // Default to 45 seconds.
-		'redirection' => 0,
-		'httpversion' => '1.0',
-		'sslverify' => false,
-		'blocking' => true,
-		'headers' => array(
-			'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8',
-			'Authorization' => 'Bearer ' . $token,
-		),
-		'body' => http_build_query($data),
-		'cookies' => array(),
-		'user-agent' => 'PHP ' . PHP_VERSION . '/WooCommerce ' . get_option('woocommerce_db_version'),
-	);
-
-	return $args;
-}
-
-
 function helloasso_get_args_post($data) {
 	$args = array(
 		'timeout' => 45, // Default to 45 seconds.
