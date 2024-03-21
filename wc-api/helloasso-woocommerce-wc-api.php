@@ -21,7 +21,6 @@ function helloasso_endpoint() {
 	}
 
 
-
 	$isInTestMode = get_option('helloasso_testmode');
 
 	if ('yes' === $isInTestMode) {
@@ -64,8 +63,9 @@ function helloasso_endpoint() {
 
 	$response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
 
-	if (is_wp_error($response)) {
-		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
+	$status_code = wp_remote_retrieve_response_code($response);
+	if (200 !== $status_code) {
+		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&status_code=' . $status_code . '&nonce=' . $nonce);
 		exit;
 	}
 
@@ -204,8 +204,6 @@ function helloasso_endpoint_order() {
 		wp_safe_redirect(get_site_url());
 		exit;
 	}
-
-
 
 
 	if (isset($_GET['type']) && isset($_GET['order_id'])) {

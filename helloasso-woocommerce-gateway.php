@@ -144,9 +144,15 @@ function helloasso_init_gateway_class() {
 						$msg = sanitize_text_field($_GET['msg']);
 
 						if (isset($msg) && 'error_connect' === $msg) {
-							echo '<div class="notice notice-error is-dismissible">
+							if (isset($_GET['status_code']) && '403' === $_GET['status_code']) {
+								echo '<div class="notice notice-error is-dismissible">
+                <p>Erreur lors de la connexion à HelloAsso. Veuillez <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a>. (Erreur 403)</p>
+                </div>';
+							} else {
+								echo '<div class="notice notice-error is-dismissible">
                 <p>Erreur lors de la connexion à HelloAsso. Veuillez réessayer.</p>
                 </div>';
+							}
 						}
 
 						if (isset($msg) && 'success_connect' === $msg) {
@@ -263,7 +269,7 @@ function helloasso_init_gateway_class() {
 				$mode = $this->get_option('testmode') === 'yes' ? 'test' : 'production';
 				$url = "https://admin.helloasso{$environment}.com/" . esc_html($organizationName) . "/accueil";
 
-				echo "<p><strong>Connecté avec <a href='{$url}'>" . esc_html($organizationName) . "</a> en mode {$mode}</strong></p>";
+				echo "<p><strong>Connecté avec <a href='" . esc_html($url) . "}' target='_blank'>" . esc_html($organizationName) . "</a> en mode " . esc_html($mode) . "</strong></p>";
 
 				echo '<a href="javascript:void(0)" id="decoHelloAsso">Se déconnecter de mon asso </a>';
 			}
@@ -524,23 +530,13 @@ function helloasso_init_gateway_class() {
 				return false;
 			}
 
-			if (preg_match('/[\'\-\ç]/', $firstName)) {
-				wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux', 'error');
+			if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $firstName)) {
+				wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 				return false;
 			}
 
-			if (preg_match('/[\'\-\ç]/', $lastName)) {
-				wc_add_notice('Le nom ne doit pas contenir de caractères spéciaux', 'error');
-				return false;
-			}
-
-			if (preg_match('/[^a-zA-Z]/', $firstName)) {
-				wc_add_notice('Le prénom ne doit pas contenir de caractères n\'appartenant pas à l\'alphabet latin', 'error');
-				return false;
-			}
-
-			if (preg_match('/[^a-zA-Z]/', $lastName)) {
-				wc_add_notice('Le nom ne doit pas contenir de caractères n\'appartenant pas à l\'alphabet latin', 'error');
+			if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $lastName)) {
+				wc_add_notice('Le nom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 				return false;
 			}
 
