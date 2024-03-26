@@ -325,7 +325,7 @@ function helloasso_init_gateway_class()
 			echo '<script defer>
             jQuery(document).ready(function($) {
 	
-                $(".woocommerce-save-button").html(`   <img src="' . plugins_url('assets/logo-ha.svg', __FILE__) . '" alt=""
+                $(".woocommerce-save-button").html(`   <img src="' . esc_html(plugins_url('assets/logo-ha.svg', __FILE__)) . '" alt=""
                 class="HaAuthorizeButtonLogo">
                 <span class="HaAuthorizeButtonTitle">' . esc_html($btnText) . '</span>`);
                 $(".woocommerce-save-button").addClass("HaAuthorizeButton");

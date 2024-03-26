@@ -10,10 +10,10 @@ License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 
-== Description ==
-
 L’extension **HelloAsso Payments for WooCommerce**, votre **solution de paiement gratuite** pour
 votre boutique.
+
+== Description ==
 
 L’extension **HelloAsso Payments for WooCommerce** vous permet d’ajouter HelloAsso comme
 moyen de paiement sur votre boutique. Une fois votre compte HelloAsso lié, vos 
