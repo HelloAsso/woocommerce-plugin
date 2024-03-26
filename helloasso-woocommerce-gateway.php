@@ -151,10 +151,8 @@ function helloasso_init_gateway_class()
 				$isConnected = true;
 			}
 
-			if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
-				wp_safe_redirect(get_site_url());
-				exit;
-			} else {
+			if (isset($_GET['nonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
+			
 				if (isset($_GET['msg'])) {
 					$msg = sanitize_text_field($_GET['msg']);
 
