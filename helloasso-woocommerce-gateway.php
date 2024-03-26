@@ -151,7 +151,7 @@ function helloasso_init_gateway_class()
 				$isConnected = true;
 			}
 
-			if (isset($_GET['nonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
+			if (isset($_GET['nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
 			
 				if (isset($_GET['msg'])) {
 					$msg = sanitize_text_field($_GET['msg']);
@@ -323,7 +323,7 @@ function helloasso_init_gateway_class()
 			echo '<script defer>
             jQuery(document).ready(function($) {
 	
-                $(".woocommerce-save-button").html(`   <img src="' . plugins_url('asset/logo-ha.svg', __FILE__) . '" alt=""
+                $(".woocommerce-save-button").html(`   <img src="' . plugins_url('assets/logo-ha.svg', __FILE__) . '" alt=""
                 class="HaAuthorizeButtonLogo">
                 <span class="HaAuthorizeButtonTitle">' . esc_html($btnText) . '</span>`);
                 $(".woocommerce-save-button").addClass("HaAuthorizeButton");
@@ -491,7 +491,7 @@ function helloasso_init_gateway_class()
 
 
 				if (!isset($_POST['woocommerce-process-checkout-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['woocommerce-process-checkout-nonce'])), 'woocommerce-process_checkout')) {
-					wc_add_notice('Le nonce est pas ok', 'error');
+					wc_add_notice('La commande ne peut être finalisé', 'error');
 				}
 
 
@@ -594,7 +594,7 @@ function helloasso_init_gateway_class()
 
 
 					if (!isset($_POST['woocommerce-process-checkout-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['woocommerce-process-checkout-nonce'])), 'woocommerce-process_checkout')) {
-						wc_add_notice('Le nonce est pas ok', 'error');
+						wc_add_notice('La commande ne peut être finalisé', 'error');
 					}
 
 

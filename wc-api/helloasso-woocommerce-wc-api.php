@@ -12,6 +12,8 @@ function helloasso_endpoint() {
 	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect_return')) {
 		wp_safe_redirect(get_site_url());
 		exit;
+	} else {
+		$nonceRequest = sanitize_text_field(wp_unslash($_GET['nonce']));
 	}
 
 
@@ -57,7 +59,7 @@ function helloasso_endpoint() {
 
 
 	$response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
-
+	
 	$status_code = wp_remote_retrieve_response_code($response);
 	if (200 !== $status_code) {
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&status_code=' . $status_code . '&nonce=' . $nonce);
