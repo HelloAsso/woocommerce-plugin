@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; //Exit if accessed directly
+}
 
 /* Return of the HelloAsso API */
 
@@ -7,18 +9,11 @@ add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 
 function helloasso_endpoint() {
 
-	if (isset($_GET['nonce'])) {
-		$nonce = sanitize_text_field($_GET['nonce']);
-		if (wp_verify_nonce($nonce, 'helloasso_connect_return')) {
-			$nonceRequest = $nonce;
-		} else {
-			wp_safe_redirect(get_site_url());
-			exit;
-		}
-	} else {
+	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect_return')) {
 		wp_safe_redirect(get_site_url());
 		exit;
 	}
+
 
 
 	$isInTestMode = get_option('helloasso_testmode');
@@ -194,16 +189,12 @@ add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
 
 function helloasso_endpoint_order() {
 
-	if (isset($_GET['nonce'])) {
-		$nonce = sanitize_text_field($_GET['nonce']);
-		if (!wp_verify_nonce($nonce, 'helloasso_order')) {
-			wp_safe_redirect(get_site_url());
-			exit;
-		}
-	} else {
+	
+	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_order')) {
 		wp_safe_redirect(get_site_url());
 		exit;
 	}
+
 
 
 	if (isset($_GET['type']) && isset($_GET['order_id'])) {

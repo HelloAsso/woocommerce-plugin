@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; //Exit if accessed directly
+}
 function helloasso_get_args_post_urlencode($data) {
 	$args = array(
 		'timeout' => 45, // Default to 45 seconds.

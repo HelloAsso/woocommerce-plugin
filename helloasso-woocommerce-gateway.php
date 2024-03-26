@@ -1,16 +1,22 @@
 <?php
-/*
+
+/** 
  * Plugin Name: HelloAsso Payments for WooCommerce
  * Description: Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association. Pour vous, c’est 0 frais, 0 commission, 0 limite !
  * Author: HelloAsso
  * Author URI: https://helloasso.com
  * Version: 1.0.0
-  * WC requires at least: 7.7
+ * License: GPLv2 or later
+ * WC requires at least: 7.7
  */
 
 /*
  * This action hook registers our PHP class as a WooCommerce payment gateway
  */
+
+if (!defined('ABSPATH')) {
+	exit; //Exit if accessed directly
+}
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
@@ -23,19 +29,21 @@ require_once('helloasso-api/helloasso-woocommerce-api.php');
 require_once('wc-api/helloasso-woocommerce-wc-api.php');
 
 
-function declare_cart_checkout_blocks_compatibility() {
+function helloasso_declare_cart_checkout_blocks_compatibility()
+{
 	if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
 		FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
 	}
 }
 
-add_action('before_woocommerce_init', 'declare_cart_checkout_blocks_compatibility');
+add_action('before_woocommerce_init', 'helloasso_declare_cart_checkout_blocks_compatibility');
 
 
 add_action('woocommerce_blocks_loaded', 'helloasso_register_order_approval_payment_method_type');
 
 
-function helloasso_register_order_approval_payment_method_type() {
+function helloasso_register_order_approval_payment_method_type()
+{
 	if (!class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
 		return;
 	}
@@ -56,20 +64,23 @@ function helloasso_register_order_approval_payment_method_type() {
  * This action hook registers our PHP class as a WooCommerce payment gateway
  */
 add_filter('woocommerce_payment_gateways', 'helloasso_add_gateway_class');
-function helloasso_add_gateway_class($gateways) {
+function helloasso_add_gateway_class($gateways)
+{
 	$gateways[] = 'WC_HelloAsso_Gateway';
 	return $gateways;
 }
 
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'woocommerce_hello_asso_actions_links');
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'helloasso_woocommerce_actions_links');
 
-function woocommerce_hello_asso_actions_links($links) {
+function helloasso_woocommerce_actions_links($links)
+{
 	$links[] = '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=helloasso') . '">' . __('Réglages', 'woocommerce-helloasso') . '</a>';
 	return $links;
 }
 
 register_activation_hook(__FILE__, 'helloasso_activate');
-function helloasso_activate() {
+function helloasso_activate()
+{
 	if (!class_exists('WooCommerce')) {
 		deactivate_plugins(plugin_basename(__FILE__));
 		wp_die('Ce plugin nécessite WooCommerce pour fonctionner');
@@ -80,7 +91,8 @@ add_action('plugins_loaded', 'helloasso_init_gateway_class');
 
 
 register_deactivation_hook(__FILE__, 'helloasso_deactivate');
-function helloasso_deactivate() {
+function helloasso_deactivate()
+{
 	delete_option('helloasso_access_token');
 	delete_option('helloasso_refresh_token');
 	delete_option('helloasso_token_expires_in');
@@ -99,11 +111,14 @@ function helloasso_deactivate() {
 
 add_action('wp_ajax_helloasso_deco', 'helloasso_deco');
 
-function helloasso_init_gateway_class() {
+function helloasso_init_gateway_class()
+{
 
-	class WC_HelloAsso_Gateway extends WC_Payment_Gateway {
+	class WC_HelloAsso_Gateway extends WC_Payment_Gateway
+	{
 
-		public function __construct() {
+		public function __construct()
+		{
 
 			$this->id = 'helloasso';
 			$this->icon = null;
@@ -128,41 +143,44 @@ function helloasso_init_gateway_class() {
 			add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 		}
 
-		public function admin_options() {
+		public function admin_options()
+		{
 			// Check if we have helloasso_access_token_asso in the options
 			$isConnected = false;
 			if (get_option('helloasso_access_token_asso')) {
 				$isConnected = true;
 			}
 
+			if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
+				wp_safe_redirect(get_site_url());
+				exit;
+			} else {
+				if (isset($_GET['msg'])) {
+					$msg = sanitize_text_field($_GET['msg']);
 
-			if (isset($_GET['nonce'])) {
-				$nonce = sanitize_text_field($_GET['nonce']);
-				if (wp_verify_nonce($nonce, 'helloasso_connect')) {
-
-					if (isset($_GET['msg'])) {
-						$msg = sanitize_text_field($_GET['msg']);
-
-						if (isset($msg) && 'error_connect' === $msg) {
-							if (isset($_GET['status_code']) && '403' === $_GET['status_code']) {
-								echo '<div class="notice notice-error is-dismissible">
-                <p>Erreur lors de la connexion à HelloAsso. Veuillez <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a>. (Erreur 403)</p>
-                </div>';
-							} else {
-								echo '<div class="notice notice-error is-dismissible">
-                <p>Erreur lors de la connexion à HelloAsso. Veuillez réessayer.</p>
-                </div>';
-							}
+					if (isset($msg) && 'error_connect' === $msg) {
+						if (isset($_GET['status_code']) && '403' === $_GET['status_code']) {
+							echo '<div class="notice notice-error is-dismissible">
+			<p>Erreur lors de la connexion à HelloAsso. Veuillez <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a>. (Erreur 403)</p>
+			</div>';
+						} else {
+							echo '<div class="notice notice-error is-dismissible">
+			<p>Erreur lors de la connexion à HelloAsso. Veuillez réessayer.</p>
+			</div>';
 						}
+					}
 
-						if (isset($msg) && 'success_connect' === $msg) {
-							echo '<div class="notice notice-success is-dismissible">
-                <p>Connexion à HelloAsso réussie.</p>
-                </div>';
-						}
+					if (isset($msg) && 'success_connect' === $msg) {
+						echo '<div class="notice notice-success is-dismissible">
+			<p>Connexion à HelloAsso réussie.</p>
+			</div>';
 					}
 				}
 			}
+
+
+
+
 
 
 			echo '<h3>' . esc_html($this->method_title) . '</h3>';
@@ -306,7 +324,8 @@ function helloasso_init_gateway_class() {
 
 			echo '<script defer>
             jQuery(document).ready(function($) {
-                $(".woocommerce-save-button").html(`   <img src="https://api.helloasso.com/v5/DocAssets/logo-ha.svg" alt=""
+	
+                $(".woocommerce-save-button").html(`   <img src="' . plugins_url('asset/logo-ha.svg', __FILE__) . '" alt=""
                 class="HaAuthorizeButtonLogo">
                 <span class="HaAuthorizeButtonTitle">' . esc_html($btnText) . '</span>`);
                 $(".woocommerce-save-button").addClass("HaAuthorizeButton");
@@ -334,7 +353,8 @@ function helloasso_init_gateway_class() {
 		}
 
 
-		public function init_form_fields() {
+		public function init_form_fields()
+		{
 
 
 			$this->form_fields = array(
@@ -377,7 +397,8 @@ function helloasso_init_gateway_class() {
 		}
 
 
-		public function process_admin_options() {
+		public function process_admin_options()
+		{
 			parent::process_admin_options();
 
 			if ($this->get_option('testmode') === 'yes') {
@@ -423,7 +444,7 @@ function helloasso_init_gateway_class() {
 			}
 
 
-			get_oauth_token($client_id, $client_secret, $api_url);
+			helloasso_get_oauth_token($client_id, $client_secret, $api_url);
 
 
 			$nonce = wp_create_nonce('helloasso_connect_return');
@@ -448,7 +469,8 @@ function helloasso_init_gateway_class() {
 		}
 
 
-		public function payment_fields() {
+		public function payment_fields()
+		{
 
 
 			if ($this->description) {
@@ -460,21 +482,22 @@ function helloasso_init_gateway_class() {
 		}
 
 
-		public function validate_fields() {
+		public function validate_fields()
+		{
 			if (isset($_GET['pay_for_order'])) { // phpcs:ignore WordPress.Security.NonceVerification
 				return true;
 			}
 
 
 			if (isset($_POST['billing_first_name']) && isset($_POST['billing_last_name']) && isset($_POST['billing_email'])) {
-				if (isset($_POST['woocommerce-process-checkout-nonce'])) {
-					$nonce = sanitize_text_field($_POST['woocommerce-process-checkout-nonce']);
-					if (!wp_verify_nonce($nonce, 'woocommerce-process_checkout')) {
-						wc_add_notice('Le nonce est pas ok', 'error');
-					}
-				} else {
-					wc_add_notice('Nonce pas ok', 'error');
+
+
+				if (!isset($_POST['woocommerce-process-checkout-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['woocommerce-process-checkout-nonce'])), 'woocommerce-process_checkout')) {
+					wc_add_notice('Le nonce est pas ok', 'error');
 				}
+
+
+
 
 				$firstName = sanitize_text_field($_POST['billing_first_name']);
 				$lastName = sanitize_text_field($_POST['billing_last_name']);
@@ -555,8 +578,9 @@ function helloasso_init_gateway_class() {
 		}
 
 
-		public function process_payment($order_id) {
-			refresh_token_asso();
+		public function process_payment($order_id)
+		{
+			helloasso_refresh_token_asso();
 			$order = wc_get_order($order_id);
 			if (isset($_GET['pay_for_order'])) {  // phpcs:ignore WordPress.Security.NonceVerification
 				$firstName = $order->get_billing_first_name();
@@ -570,14 +594,11 @@ function helloasso_init_gateway_class() {
 			} else {
 				if (isset($_POST['billing_first_name'])) {
 
-					if (isset($_POST['woocommerce-process-checkout-nonce'])) {
-						$nonce = sanitize_text_field($_POST['woocommerce-process-checkout-nonce']);
-						if (!wp_verify_nonce($nonce, 'woocommerce-process_checkout')) {
-							wc_add_notice('Le nonce est pas ok', 'error');
-						}
-					} else {
-						wc_add_notice('Nonce pas ok', 'error');
+
+					if (!isset($_POST['woocommerce-process-checkout-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['woocommerce-process-checkout-nonce'])), 'woocommerce-process_checkout')) {
+						wc_add_notice('Le nonce est pas ok', 'error');
 					}
+
 
 					if (isset($_POST['billing_first_name'])) {
 						$firstName = sanitize_text_field($_POST['billing_first_name']);
@@ -626,7 +647,6 @@ function helloasso_init_gateway_class() {
 					} else {
 						$company = '';
 					}
-
 				} else {
 					$json = file_get_contents('php://input');
 					$data = json_decode($json, true);

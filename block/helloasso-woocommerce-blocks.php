@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; //Exit if accessed directly
+}
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 
 final class Helloasso_Blocks extends AbstractPaymentMethodType {

@@ -46,6 +46,11 @@ volontaires sont l’unique source de revenus de HelloAsso et permettent aux ass
 
 Support HelloAsso : Une équipe de 15 personnes disponible par téléphone (05 64 88 02 34) et par email à contact@helloasso.org
 
+L’extension **HelloAsso Payments for WooCommerce** utilise l'API externe HelloAsso pour effectuer les paiements et la connexion de votre association.
+
+-
+- 
+
 == Installation ==
 
 *Manuel*

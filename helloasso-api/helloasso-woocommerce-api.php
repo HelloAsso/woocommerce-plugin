@@ -1,5 +1,8 @@
 <?php
-function get_oauth_token($client_id, $client_secret, $api_url) {
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; //Exit if accessed directly
+}
+function helloasso_get_oauth_token($client_id, $client_secret, $api_url) {
 
 	$access_token = get_option('helloasso_access_token');
 	$refresh_token = get_option('helloasso_refresh_token');

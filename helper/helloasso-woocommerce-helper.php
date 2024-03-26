@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; //Exit if accessed directly
+}
 function helloasso_generate_pkce() {
 	$randomBytes = random_bytes(32);
 	$codeVerifier = bin2hex($randomBytes);
