@@ -6,23 +6,27 @@ Requires at least: 5.0
 Tested up to: 6.4.3
 Requires PHP: 7.2.34
 Stable tag: 1.0.0
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+License: GPLv3
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
+
+== Description ==
 
 L’extension **HelloAsso Payments for WooCommerce**, votre **solution de paiement gratuite** pour
 votre boutique.
 
-== Gratuite, simple et intégrée ==
-
 L’extension **HelloAsso Payments for WooCommerce** vous permet d’ajouter HelloAsso comme
 moyen de paiement sur votre boutique. Une fois votre compte HelloAsso lié, vos 
-paiements seront réalisés gratuitement par HelloAsso (sans frais et sans commission pour votre 
-association) et vous pourrez suivre votre activité directement depuis votre compte HelloAsso.
+paiements seront réalisés gratuitement (sans frais et sans commission pour votre association) par HelloAsso via le module [HelloAsso Checkout](https://www.helloasso.com/outils/checkout)
+Tous paiements réalisés via votre boutique apparaitrons dans votre compte asso HelloAsso comme des paiements réalisés via le Checkout.
 
-Plus sur HelloAsso : 
+Vous pouvez également vous créer un compte de test sur [notre environnement de test](https://www.helloasso-sandbox.com) afin de tester des paiements sur votre boutique.
 
-HelloAsso, **la plateforme des associations**, est la solution gratuite des associations pour collecter 
+En utilisant ce plugin, vous acceptez les [conditions générales d'utilisation](https://www.helloasso.com/cgu-associations/2023-10) et à la [politique de confidentialité](https://www.helloasso.com/confidentialite) de HelloAsso.
+
+= HelloAsso =
+
+HelloAsso, **la plateforme des associations**, est la solution gratuite des associations pour collecter
 des paiements et dons en ligne. Plus de 300 000 associations françaises font confiance à HelloAsso 
 pour gagner du temps et financer leurs projets avec plusieurs outils pour : 
 
@@ -60,8 +64,9 @@ L’extension **HelloAsso Payments for WooCommerce** utilise l'API externe Hello
 
 *Via le store*
 
-1. Télécharger le plugin sur votre WordPress
-2. Activer dans la partie 'extension' du back-office WordPress
+1. Téléchargez le plugin sur votre WordPress
+2. Activez dans la partie 'Extensions' du back-office WordPress
+3. Créez-vous un compte sur helloasso.com ou liez votre compte existant.
 
 == Frequently Asked Questions ==
 

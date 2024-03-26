@@ -1,23 +1,25 @@
 <?php
-
-/** 
- * Plugin Name: HelloAsso Payments for WooCommerce
- * Description: Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association. Pour vous, c’est 0 frais, 0 commission, 0 limite !
- * Author: HelloAsso
- * Author URI: https://helloasso.com
- * Version: 1.0.0
- * License: GPLv2 or later
+/**
+ * Plugin Name:       HelloAsso Payments for WooCommerce
+ * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
+ * Version:           1.0.0
+ * Requires at least: 5.0
  * WC requires at least: 7.7
+ * Requires PHP:      7.2.34
+ * Author:            HelloAsso
+ * Author URI:        https://helloasso.com
+ * License:           GPLv3
+ * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
  */
 
-/*
- * This action hook registers our PHP class as a WooCommerce payment gateway
- */
 
 if (!defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
+/*
+ * This action hook registers our PHP class as a WooCommerce payment gateway
+ */
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 
@@ -152,7 +154,7 @@ function helloasso_init_gateway_class()
 			}
 
 			if (isset($_GET['nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
-			
+
 				if (isset($_GET['msg'])) {
 					$msg = sanitize_text_field($_GET['msg']);
 
