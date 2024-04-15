@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       HelloAsso Payments for WooCommerce
  * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 5.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
@@ -109,6 +109,8 @@ function helloasso_deactivate()
 	delete_option('helloasso_refresh_token_expires_in_asso');
 	delete_option('helloasso_webhook_url');
 	delete_option('helloasso_testmode');
+	delete_option('woocommerce_helloasso_settings');
+	delete_option('helloasso_webhook_data');
 }
 
 add_action('wp_ajax_helloasso_deco', 'helloasso_deco');
@@ -139,7 +141,7 @@ function helloasso_init_gateway_class()
 			$this->init_settings();
 
 			$this->title = $this->get_option('title');
-			$this->description = $this->get_option('description');
+			$this->description = 'HelloAsso favorise';
 			$this->enabled = $this->get_option('enabled');
 			$this->testmode = 'yes' === $this->get_option('testmode');
 			add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -189,17 +191,19 @@ function helloasso_init_gateway_class()
 			echo '
             <p>
          
-            Accepter gratuitement des paiements avec votre association HelloAsso.<br/>
-            Intégrer HelloAsso, c’est rejoindre un système solidaire, financé par les contributions volontaires des utilisateurs, afin d’offrir des services en ligne, de qualité et gratuits aux associations.<br/>
-            Ainsi, en le rejoignant, vous bénéficiez de ce modèle solidaire, vous permettant de collecter sans frais des paiements en ligne. Il est donc important de communiquer sur ce modèle, pour informer les utilisateurs de la portée de leurs paiements.<br.>
+            Intégrer HelloAsso, c’est rejoindre un système solidaire, <b>financé par les contributions volontaires des utilisateurs</b>, afin d’offrir des services en ligne, de qualité et gratuits à toutes les associations de France.<br/>
+            Ainsi, en le rejoignant, vous bénéficiez de ce modèle solidaire, vous permettant de collecter sans frais des paiements en ligne.<br.>
+            Il est donc important de communiquer sur ce modèle, pour informer vos utilisateurs de la portée de leurs paiements.
             <p>
 
-            <p><strong>
-            
-            Pour accepter les paiements avec HelloAsso, vous devrez vous connecter à votre compte HelloAsso.</strong></p>
             <p>
-            Si vous rencontrez des problèmes, n’hésitez pas à aller faire un tour sur <a href="https://centredaide.helloasso.com/s/" target="_blank">
-            notre centre d’aide</a> ou à <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a> directement.
+            	<strong>Pour accepter les paiements avec HelloAsso, vous devrez vous connecter à votre compte HelloAsso.</strong>
+            	<strong>Vous n\'avez pas de compte sur HelloAsso, <a href="https://auth.helloasso.com/inscription?from=woocommerce" target="_blank">créer votre compte en quelques minutes ici.</a></strong>
+            </p>
+            
+            <p>
+            <i>Si vous rencontrez des problèmes, n’hésitez pas à aller faire un tour sur <a href="https://centredaide.helloasso.com/s/" target="_blank">
+            notre centre d’aide</a> ou à <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a> directement.</i>
             <p>
 
             
@@ -374,15 +378,6 @@ function helloasso_init_gateway_class()
 						'readonly' => 'readonly'
 					),
 					'desc_tip' => true,
-				),
-				'description' => array(
-					'title' => 'Description',
-					'type' => 'textarea',
-					'description' => 'La description du moyen de paiement qui s\'affichera pendant le checkout.',
-					'default' => "HelloAsso prend en charge les frais de transaction : 100% de votre paiement sera versé à l'association choisie. Vous pouvez laisser une contribution volontaire à HelloAsso lors de la prochaine étape de paiement : cela représente leur seule source de revenus.",
-					'custom_attributes' => array(
-						'readonly' => 'readonly'
-					)
 				),
 				'testmode' => array(
 					'title' => 'Test mode',

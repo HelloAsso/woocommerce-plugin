@@ -90,8 +90,10 @@ function helloasso_endpoint() {
 
 		$responseNotif = wp_remote_request($urlNotif, helloasso_get_args_put_token($dataNotifSend, $data->access_token));
 
-		if (is_wp_error($responseNotif)) {
-			return null;
+		$status_code = wp_remote_retrieve_response_code($responseNotif);
+		if (200 !== $status_code) {
+			wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&status_code=' . $status_code . '&nonce=' . $nonce);
+			exit;
 		}
 
 		delete_option('helloasso_webhook_url');
