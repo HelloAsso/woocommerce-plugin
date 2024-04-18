@@ -87,6 +87,12 @@ function helloasso_activate()
 		deactivate_plugins(plugin_basename(__FILE__));
 		wp_die('Ce plugin nécessite WooCommerce pour fonctionner');
 	}
+
+	$currency = get_woocommerce_currency();
+	if ($currency !== 'EUR') {
+		deactivate_plugins(plugin_basename(__FILE__));
+		wp_die('HelloAsso ne prend en charge que les paiements en euros. Veuillez changer la devise de votre boutique en euros pour activer ce plugin.');
+	}
 }
 
 add_action('plugins_loaded', 'helloasso_init_gateway_class');
