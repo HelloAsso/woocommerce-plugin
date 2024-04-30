@@ -5,7 +5,7 @@ Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
 Tested up to: 6.4.3
 Requires PHP: 7.2.34
-Stable tag: 1.0.1
+Stable tag: 1.0.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -88,6 +88,13 @@ Please report security bugs found in the source code of the helloasso plugin thr
 https://www.youtube.com/watch?v=Bjaqc_Yun8g
 
 == Changelog ==
+
+= 1.0.3 =
+* Simplification de la configuration
+* Blocage des devises uniquement en euros
+
+= 1.0.2 =
+* Meilleure gestion des erreurs 403 lors de l'authentification
 
 = 1.0.1 =
 * Revue des erreurs
