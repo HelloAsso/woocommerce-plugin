@@ -10,7 +10,7 @@ We only support the latest version of our software with security updates. Please
 
 For security vulnerabilities, we prioritize receiving information via email. You can send your reports either encrypted or unencrypted to the following address:
 
-- **Email:** securite@helloasso.com
+- **Email:** securite@helloasso.org
 - **GPG key:** at end of this doc
 
 Please use our GPG key for encrypted communications. If you are unfamiliar with encrypted emails, you may send them unencrypted.
