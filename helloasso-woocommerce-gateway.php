@@ -693,7 +693,7 @@ function helloasso_init_gateway_class()
 				'backUrl' => $backUrlOrder,
 				'errorUrl' => $errorUrlOrder,
 				'returnUrl' => $returnUrlOrder,
-				'containsDonation' => true,
+				'containsDonation' => false,
 				'payer' => array(
 					'firstName' => $firstName,
 					'lastName' => $lastName,
