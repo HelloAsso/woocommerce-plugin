@@ -95,7 +95,7 @@ function helloasso_convert_country_code($country) {
 		'ET' => 'ETH', //Ethiopia
 		'FK' => 'FLK', //Falkland Islands
 		'FO' => 'FRO', //Faroe Islands
-		'FJ' => 'FIJ', //Fiji
+		'FJ' => 'FJI', //Fiji
 		'FI' => 'FIN', //Finland
 		'FR' => 'FRA', //France
 		'GF' => 'GUF', //French Guiana

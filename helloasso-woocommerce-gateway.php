@@ -149,7 +149,6 @@ function helloasso_init_gateway_class()
 			$this->title = $this->get_option('title');
 			$this->description = 'Le modèle solidaire de HelloAsso garantit que 100% de votre paiement sera versé à l’association choisie. Vous pouvez soutenir l’aide qu’ils apportent aux associations en laissant une contribution volontaire à HelloAsso au moment de votre paiement.';
 			$this->enabled = $this->get_option('enabled');
-			$this->testmode = 'yes' === $this->get_option('testmode');
 			add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 		}
 

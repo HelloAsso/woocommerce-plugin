@@ -3,9 +3,9 @@ Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
-Tested up to: 6.4.3
+Tested up to: 6.5.4
 Requires PHP: 7.2.34
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -74,6 +74,10 @@ Seules les associations françaises déclarées et qui possèdent un compte banc
 = Comment utiliser l'extension HelloAsso ? =
 Ce plugin vous permet de sélectionner HelloAsso comme moyen de paiement pour votre boutique. Ainsi, vous bénéficiez des avantages de la boutique tout en récoltant 100% des montants des paiements (sans frais, sans commission).
 
+= Je n'arrive pas à lier mon compte HelloAsso =
+Ce plugin necessite que l'API de wordpress soit activée. Pour ce faire, rendez-vous dans les Réglages > Permaliens puis selectionner "Nom de l'article".
+Si cela ne fonctionne toujours pas, n'hésitez pas à nous contacter !
+
 = J'ai un problème ou une question, comment contacter le support ? =
 Notre équipe Accompagnement est disponible par email (contact@helloasso.org) et par téléphone du lundi au vendredi au 05 64 88 02 34.
 
@@ -91,6 +95,9 @@ Please report security bugs found in the source code of the helloasso plugin thr
 https://www.youtube.com/watch?v=Bjaqc_Yun8g
 
 == Changelog ==
+
+= 1.0.6 =
+* Compatibilité avec la version 6.5.4 de Wordpress
 
 = 1.0.5 =
 * Suppression du champs containDonation
