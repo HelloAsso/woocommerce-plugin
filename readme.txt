@@ -77,6 +77,9 @@ Ce plugin vous permet de sélectionner HelloAsso comme moyen de paiement pour vo
 = J'ai un problème ou une question, comment contacter le support ? =
 Notre équipe Accompagnement est disponible par email (contact@helloasso.org) et par téléphone du lundi au vendredi au 05 64 88 02 34.
 
+= Je n'arrive pas a lier mon association =
+Notre plugin nécessite que l'option "nom de l'article" soit sélectionnée dans la configuration des permaliens de votre WordPress. Si cette option n'est pas activée, il se peut que la liaison ne soit pas possible. Si le problème persiste, n'hésitez pas à nous contacter.
+
 = Où puis-je signaler les failles de sécurité trouvées dans ce plugin ? =
 Veuillez signaler les failles de sécurité trouvées dans le code source du plugin helloasso via le [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/helloasso). L'équipe de Patchstack vous assistera pour la vérification, l'attribution de CVE et notifiera les développeurs de ce plugin.
 
