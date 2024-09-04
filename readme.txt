@@ -5,7 +5,7 @@ Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
 Tested up to: 6.5.4
 Requires PHP: 7.2.34
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -95,6 +95,9 @@ Please report security bugs found in the source code of the helloasso plugin thr
 https://www.youtube.com/watch?v=Bjaqc_Yun8g
 
 == Changelog ==
+
+= 1.0.7 =
+* Fix: Erreur "Call to a member function update_status()" filtrage des notifications
 
 = 1.0.6 =
 * Compatibilité avec la version 6.5.4 de Wordpress
