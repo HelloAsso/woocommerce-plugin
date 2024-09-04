@@ -123,6 +123,8 @@ function helloasso_endpoint_deco() {
 	delete_option('helloasso_token_expires_in_asso');
 	delete_option('helloasso_refresh_token_expires_in_asso');
 	delete_option('helloasso_webhook_url');
+
+	#TODO: Supprimer l'URL de notification
 	echo wp_json_encode(array('success' => true, 'message' => 'Vous avez bien été déconnecté de votre compte HelloAsso'));
 	exit;
 }
@@ -135,10 +137,11 @@ function helloasso_endpoint_webhook() {
 
 	if ('Payment' === $data['eventType']) {
 		$order = wc_get_order($data['metadata']['reference']);
-		$order->update_status('processing');
+		if ($order) {
+			$order->update_status('processing');
+		}
 	}
-
-	if ('Organization' === $data['eventType']) {
+	elseif ('Organization' === $data['eventType']) {
 		delete_option('helloasso_organization_slug');
 		add_option('helloasso_organization_slug', $data['data']['new_slug_organization']);
 
@@ -207,7 +210,7 @@ function helloasso_endpoint_order() {
 
 		if ('error' === $type) {
 			$order = wc_get_order($order_id);
-			$order->update_status('failed');
+			$order->update_status('failed');			}
 			wp_safe_redirect($order->get_checkout_order_received_url());
 		}
 
