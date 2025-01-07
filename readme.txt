@@ -3,9 +3,9 @@ Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
-Tested up to: 6.5.4
+Tested up to: 6.7.1
 Requires PHP: 7.2.34
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -45,7 +45,7 @@ HelloAsso, c’est une équipe de plus de 180 personnes au service de plus de 30
 HelloAsso aide les associations à collecter des paiements en ligne et propose ses services gratuitement.
 HelloAsso prend à sa charge tous les frais de transaction pour que vous puissiez bénéficier de la totalité des sommes versées par vos publics, **sans frais**. Les contributions volontaires laissées par ces derniers sont notre unique source de revenus.
 
-Support HelloAsso : Une équipe dédiée de 15 personnes est disponible par téléphone (05 64 88 02 34) et par email à contact@helloasso.org
+Support HelloAsso : Une équipe dédiée de 15 personnes est disponible via notre [centre d'aide](https://centredaide.helloasso.com/association?question=comment-integrer-mes-campagnes-sur-wordpress).
 
 
 -
@@ -79,7 +79,7 @@ Ce plugin necessite que l'API de wordpress soit activée. Pour ce faire, rendez-
 Si cela ne fonctionne toujours pas, n'hésitez pas à nous contacter !
 
 = J'ai un problème ou une question, comment contacter le support ? =
-Notre équipe Accompagnement est disponible par email (contact@helloasso.org) et par téléphone du lundi au vendredi au 05 64 88 02 34.
+Notre équipe Accompagnement est disponible via notre [centre d'aide](https://centredaide.helloasso.com/association?question=comment-integrer-mes-campagnes-sur-wordpress).
 
 = Je n'arrive pas a lier mon association =
 Notre plugin nécessite que l'option "nom de l'article" soit sélectionnée dans la configuration des permaliens de votre WordPress. Si cette option n'est pas activée, il se peut que la liaison ne soit pas possible. Si le problème persiste, n'hésitez pas à nous contacter.
@@ -92,9 +92,12 @@ Please report security bugs found in the source code of the helloasso plugin thr
 
 == Video ==
 
-https://www.youtube.com/watch?v=Bjaqc_Yun8g
+[youtube https://www.youtube.com/watch?v=yrv1_PIakac]
 
 == Changelog ==
+
+= 1.0.7 =
+* Mise à jour de la compatiblité 6.7.1 et de la description
 
 = 1.0.6 =
 * Compatibilité avec la version 6.5.4 de Wordpress
