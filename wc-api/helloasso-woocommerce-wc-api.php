@@ -1,5 +1,5 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
@@ -7,16 +7,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 
-function helloasso_endpoint() {
-
+function helloasso_endpoint()
+{
 	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect_return')) {
 		wp_safe_redirect(get_site_url());
 		exit;
 	} else {
 		$nonceRequest = sanitize_text_field(wp_unslash($_GET['nonce']));
 	}
-
-
 
 	$isInTestMode = get_option('helloasso_testmode');
 
@@ -40,7 +38,7 @@ function helloasso_endpoint() {
 	$code = sanitize_text_field($_GET['code']);
 	$state = sanitize_text_field($_GET['state']);
 
-	if (get_option('hello_asso_state') !== $state) {
+	if (get_option('helloasso_state') !== $state) {
 
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
 		exit;
@@ -57,15 +55,13 @@ function helloasso_endpoint() {
 		'code_verifier' => get_option('helloasso_code_verifier')
 	);
 
-
 	$response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
-	
+
 	$status_code = wp_remote_retrieve_response_code($response);
 	if (200 !== $status_code) {
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&status_code=' . $status_code . '&nonce=' . $nonce);
 		exit;
 	}
-
 
 	$response_body = wp_remote_retrieve_body($response);
 	$data = json_decode($response_body);
@@ -92,6 +88,19 @@ function helloasso_endpoint() {
 
 		$status_code = wp_remote_retrieve_response_code($responseNotif);
 		if (200 !== $status_code) {
+			$gateway_settings = get_option('woocommerce_helloasso_settings', array());
+			$gateway_settings['enabled'] = 'no';
+			update_option('woocommerce_helloasso_settings', $gateway_settings);
+
+			delete_option('helloasso_code_verifier');
+			delete_option('helloasso_state');
+			delete_option('helloasso_authorization_url');
+			delete_option('helloasso_organization_slug');
+			delete_option('helloasso_access_token_asso');
+			delete_option('helloasso_refresh_token_asso');
+			delete_option('helloasso_token_expires_in_asso');
+			delete_option('helloasso_refresh_token_expires_in_asso');
+
 			wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&status_code=' . $status_code . '&nonce=' . $nonce);
 			exit;
 		}
@@ -109,14 +118,15 @@ function helloasso_endpoint() {
 
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
 
-function helloasso_endpoint_deco() {
+function helloasso_endpoint_deco()
+{
 	delete_option('helloasso_access_token');
 	delete_option('helloasso_refresh_token');
 	delete_option('helloasso_token_expires_in');
 	delete_option('helloasso_refresh_token_expires_in');
 	delete_option('helloasso_code_verifier');
-	delete_option('hello_asso_state');
-	delete_option('hello_asso_authorization_url');
+	delete_option('helloasso_state');
+	delete_option('helloasso_authorization_url');
 	delete_option('helloasso_organization_slug');
 	delete_option('helloasso_access_token_asso');
 	delete_option('helloasso_refresh_token_asso');
@@ -129,13 +139,14 @@ function helloasso_endpoint_deco() {
 
 add_action('woocommerce_api_helloasso_webhook', 'helloasso_endpoint_webhook');
 
-function helloasso_endpoint_webhook() {
+function helloasso_endpoint_webhook()
+{
 	$data = json_decode(file_get_contents('php://input'), true);
 	add_option('helloasso_webhook_data', wp_json_encode($data));
 
 	if ('Payment' === $data['eventType']) {
 		$order = wc_get_order($data['metadata']['reference']);
-		$order->update_status('processing');
+		$order->update_status('pending');
 	}
 
 	if ('Organization' === $data['eventType']) {
@@ -191,9 +202,10 @@ function helloasso_endpoint_webhook() {
 
 add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
 
-function helloasso_endpoint_order() {
+function helloasso_endpoint_order()
+{
 
-	
+
 	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_order')) {
 		wp_safe_redirect(get_site_url());
 		exit;
@@ -218,7 +230,7 @@ function helloasso_endpoint_order() {
 
 				if ('succeeded' === $code) {
 					$order = wc_get_order($order_id);
-					$order->update_status('pending');
+					$order->update_status('processing');
 					wp_safe_redirect($order->get_checkout_order_received_url());
 				}
 
