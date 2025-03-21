@@ -1,9 +1,10 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
-function helloasso_get_oauth_token($client_id, $client_secret, $api_url) {
 
+function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
+{
 	$access_token = get_option('helloasso_access_token');
 	$refresh_token = get_option('helloasso_refresh_token');
 	$token_expires_in = get_option('helloasso_token_expires_in');
@@ -23,7 +24,7 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url) {
 			'refresh_token' => $refresh_token
 		);
 
-		$response = wp_remote_post($url, helloasso_get_args_post($data));
+		$response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
 
 		if (is_wp_error($response)) {
 			return null;
@@ -44,7 +45,7 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url) {
 	}
 
 	if (!$refresh_token) {
-		$url = $api_url . '/oauth2/token';
+		$url = $api_url . 'oauth2/token';
 
 		$data = array(
 			'client_id' => $client_id,
@@ -52,7 +53,7 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url) {
 			'grant_type' => 'client_credentials'
 		);
 
-		$response = wp_remote_post($url, helloasso_get_args_post($data));
+		$response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
 
 		if (is_wp_error($response)) {
 			return null;

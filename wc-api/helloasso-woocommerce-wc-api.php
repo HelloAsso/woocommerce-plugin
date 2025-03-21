@@ -6,7 +6,6 @@ if (! defined('ABSPATH')) {
 /* Return of the HelloAsso API */
 
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
-
 function helloasso_endpoint()
 {
 	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect_return')) {
@@ -115,9 +114,7 @@ function helloasso_endpoint()
 	exit;
 }
 
-
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
-
 function helloasso_endpoint_deco()
 {
 	delete_option('helloasso_access_token');
@@ -138,108 +135,69 @@ function helloasso_endpoint_deco()
 }
 
 add_action('woocommerce_api_helloasso_webhook', 'helloasso_endpoint_webhook');
-
 function helloasso_endpoint_webhook()
 {
-	$data = json_decode(file_get_contents('php://input'), true);
+	$raw_input = file_get_contents('php://input');
+	$data = json_decode($raw_input, true);
+
 	add_option('helloasso_webhook_data', wp_json_encode($data));
 
-	if ('Payment' === $data['eventType']) {
-		$order = wc_get_order($data['metadata']['reference']);
-		$order->update_status('pending');
-	}
-
-	if ('Organization' === $data['eventType']) {
+	if ('Order' === $data['eventType']) {
+		validate_order($data['metadata']['reference'], $data['data']['checkoutIntentId']);
+	} else if ('Organization' === $data['eventType']) {
 		delete_option('helloasso_organization_slug');
 		add_option('helloasso_organization_slug', $data['data']['new_slug_organization']);
 
-		$helloasso_refresh_token_asso = get_option('helloasso_refresh_token_asso');
-		$isInTestMode = get_option('helloasso_testmode');
-
-		if ('yes' === $isInTestMode) {
-			$client_id = HELLOASSO_WOOCOMMERCE_CLIENT_ID_TEST;
-			$client_secret = HELLOASSO_WOOCOMMERCE_CLIENT_SECRET_TEST;
-			$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
-		} else {
-			$client_id = HELLOASSO_WOOCOMMERCE_CLIENT_ID_PROD;
-			$client_secret = HELLOASSO_WOOCOMMERCE_CLIENT_SECRET_PROD;
-			$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
-		}
-
-		if ($helloasso_refresh_token_asso) {
-			$url = $api_url . 'oauth2/token';
-
-			$data = array(
-				'client_id' => $client_id,
-				'client_secret' => $client_secret,
-				'grant_type' => 'refresh_token',
-				'refresh_token' => $helloasso_refresh_token_asso
-			);
-
-			$response = wp_remote_post($url, helloasso_get_args_post($data));
-
-			if (is_wp_error($response)) {
-				return null;
-			}
-
-			$body = wp_remote_retrieve_body($response);
-			$data = json_decode($body);
-
-			if (isset($data->access_token)) {
-				update_option('helloasso_access_token_asso', $data->access_token);
-				update_option('helloasso_refresh_token_asso', $data->refresh_token);
-				update_option('helloasso_token_expires_in_asso', $data->expires_in);
-				update_option('helloasso_refresh_token_expires_in_asso', time() + 2629800);
-				return $data->access_token;
-			} else {
-				return null;
-			}
-		}
+		helloasso_refresh_token_asso();
 	}
 
 	exit;
 }
 
 add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
-
 function helloasso_endpoint_order()
 {
-
-
 	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_order')) {
 		wp_safe_redirect(get_site_url());
 		exit;
 	}
 
-
-
 	if (isset($_GET['type']) && isset($_GET['order_id'])) {
-		$type = sanitize_text_field($_GET['type']);
 		$order_id = sanitize_text_field($_GET['order_id']);
+		$checkoutIntentId = sanitize_text_field($_GET['checkoutIntentId']);
 
-		if ('error' === $type) {
-			$order = wc_get_order($order_id);
-			$order->update_status('failed');
-			wp_safe_redirect($order->get_checkout_order_received_url());
-		}
+		validate_order($order_id, $checkoutIntentId);
 
-		if ('return' === $type) {
+		wp_safe_redirect($order->get_checkout_order_received_url());
+	}
+}
 
-			if (isset($_GET['code'])) {
-				$code = sanitize_text_field($_GET['code']);
+function validate_order($orderId, $checkoutIntentId)
+{
+	$order = wc_get_order($orderId);
+	if (!$order) {
+		exit;
+	}
 
-				if ('succeeded' === $code) {
-					$order = wc_get_order($order_id);
-					$order->update_status('processing');
-					wp_safe_redirect($order->get_checkout_order_received_url());
-				}
+	$isInTestMode = get_option('helloasso_testmode');
+	if ('yes' === $isInTestMode) {
+		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
+	} else {
+		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
+	}
 
-				if ('refused' === $code) {
-					$order = wc_get_order($order_id);
-					$order->update_status('failed');
-					wp_safe_redirect($order->get_checkout_order_received_url());
-				}
-			}
-		}
+	helloasso_refresh_token_asso();
+
+	$slug = get_option('helloasso_organization_slug');
+	$helloasso_access_token_asso = get_option('helloasso_access_token_asso');
+
+	$response = wp_remote_request($api_url . 'v5/organizations/' . $slug . '/checkout-intents/' . $checkoutIntentId, helloasso_get_args_get_token($helloasso_access_token_asso));
+	$body = wp_remote_retrieve_body($response);
+	$haOrder = json_decode($body);
+
+	if ($haOrder->order->payments[0]->state == 'Authorized') {
+		$order->update_status('processing');
+	} else if ($haOrder->order->payments[0]->state == 'Refused') {
+		$order->update_status('failed');
 	}
 }
