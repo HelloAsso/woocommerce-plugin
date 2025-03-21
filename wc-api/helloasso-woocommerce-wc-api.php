@@ -166,7 +166,7 @@ function helloasso_endpoint_order()
 		$order_id = sanitize_text_field($_GET['order_id']);
 		$checkoutIntentId = sanitize_text_field($_GET['checkoutIntentId']);
 
-		validate_order($order_id, $checkoutIntentId);
+		$order = validate_order($order_id, $checkoutIntentId);
 
 		wp_safe_redirect($order->get_checkout_order_received_url());
 	}
@@ -200,4 +200,6 @@ function validate_order($orderId, $checkoutIntentId)
 	} else if ($haOrder->order->payments[0]->state == 'Refused') {
 		$order->update_status('failed');
 	}
+
+	return $order;
 }

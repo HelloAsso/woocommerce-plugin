@@ -3,9 +3,9 @@ Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
-Tested up to: 6.7.1
+Tested up to: 6.7.2
 Requires PHP: 7.2.34
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -95,6 +95,10 @@ Please report security bugs found in the source code of the helloasso plugin thr
 [youtube https://www.youtube.com/watch?v=yrv1_PIakac]
 
 == Changelog ==
+
+= 1.0.8 =
+* Amélioration du process de connexion (bonne gestion des erreurs)
+* Correction sur la validation des commandes
 
 = 1.0.7 =
 * Mise à jour de la compatiblité 6.7.1 et de la description
