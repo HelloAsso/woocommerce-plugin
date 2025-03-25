@@ -3,8 +3,6 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
-/* Return of the HelloAsso API */
-
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 function helloasso_endpoint()
 {
@@ -196,7 +194,7 @@ function validate_order($orderId, $checkoutIntentId)
 	$haOrder = json_decode($body);
 
 	if ($haOrder->order->payments[0]->state == 'Authorized') {
-		$order->update_status('processing');
+		$order->payment_complete();
 	} else if ($haOrder->order->payments[0]->state == 'Refused') {
 		$order->update_status('failed');
 	}

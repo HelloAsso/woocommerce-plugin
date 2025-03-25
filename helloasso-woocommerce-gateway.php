@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       HelloAsso Payments for WooCommerce
  * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
- * Version:           1.0.8
+ * Version:           1.0.9
  * Requires at least: 5.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
@@ -347,6 +347,14 @@ function helloasso_init_gateway_class()
 					'description' => '',
 					'default' => 'no'
 				),
+				'multi_enabled' => array(
+					'title' => 'Paiement en plusieurs fois',
+					'label' => 'Activer le paiement en 3 fois',
+					'type' => 'checkbox',
+					'description' => 'Cette option laissera le choix au payeur de réaliser son paiement en une ou trois fois.',
+					'default' => 'no',
+					'desc_tip' => true,
+				),
 				'title' => array(
 					'title' => 'Titre',
 					'type' => 'text',
@@ -440,19 +448,9 @@ function helloasso_init_gateway_class()
 			exit;
 		}
 
-		public function payment_fields()
-		{
-			if ($this->description) {
-				echo '<div style="display: flex; align-items: center;">';
-				echo '<img style="max-width: 50px; height:auto; margin-right: 16px;" src="assets/logo-ha.png" alt="HelloAsso Logo" />';
-				echo '<p>' . wp_kses_post($this->description) . '</p>';
-				echo '</div>';
-			}
-		}
-
 		public function validate_fields()
 		{
-			if (isset($_GET['pay_for_order'])) { // phpcs:ignore WordPress.Security.NonceVerification
+			if (isset($_GET['pay_for_order'])) {
 				return true;
 			}
 
@@ -542,7 +540,7 @@ function helloasso_init_gateway_class()
 		{
 			helloasso_refresh_token_asso();
 			$order = wc_get_order($order_id);
-			if (isset($_GET['pay_for_order'])) {  // phpcs:ignore WordPress.Security.NonceVerification
+			if (isset($_GET['pay_for_order'])) {
 				$firstName = $order->get_billing_first_name();
 				$lastName = $order->get_billing_last_name();
 				$email = $order->get_billing_email();
@@ -619,6 +617,7 @@ function helloasso_init_gateway_class()
 				}
 			}
 
+
 			$items = $order->get_items();
 			$total = $order->get_total();
 
@@ -665,6 +664,65 @@ function helloasso_init_gateway_class()
 					'cart' => $cartBeautifulFormat
 				)
 			);
+
+			if ($this->get_option('multi_enabled') === 'yes') {
+				$payment_type = 'one_time';
+
+				if (isset($_POST['payment_data']) && isset($_POST['payment_data']['payment_type'])) {
+					$payment_type = sanitize_text_field($_POST['payment_data']['payment_type']);
+				} elseif (isset($_POST['payment_type'])) {
+					$payment_type = sanitize_text_field($_POST['payment_type']);
+				} elseif (isset($_POST['helloasso_payment_type'])) {
+					$payment_type = sanitize_text_field($_POST['helloasso_payment_type']);
+				} elseif (isset($_POST['paymentMethodData']) && isset($_POST['paymentMethodData']['payment_type'])) {
+					$payment_type = sanitize_text_field($_POST['paymentMethodData']['payment_type']);
+				}
+
+				if (empty($payment_type) || $payment_type === 'one_time') {
+					$input = file_get_contents('php://input');
+					$request = json_decode($input, true);
+
+					if ($request) {
+						if (isset($request['payment_data']) && isset($request['payment_data']['payment_type'])) {
+							$payment_type = sanitize_text_field($request['payment_data']['payment_type']);
+						} elseif (isset($request['paymentMethodData']) && isset($request['paymentMethodData']['payment_type'])) {
+							$payment_type = sanitize_text_field($request['paymentMethodData']['payment_type']);
+						} elseif (isset($request['meta']) && isset($request['meta']['paymentMethodData']) && isset($request['meta']['paymentMethodData']['payment_type'])) {
+							$payment_type = sanitize_text_field($request['meta']['paymentMethodData']['payment_type']);
+						} else {
+							$payment_type = helloasso_find_payment_type_recursive($request);
+						}
+					}
+				}
+
+				$order->update_meta_data('helloasso_payment_type', $payment_type === 'three_times' ? '3 fois (prochaine écheance à suivre sur HelloAsso)' : 'une fois');
+				$order->save();
+
+				if ($payment_type === 'three_times') {
+					$totalCents = round($total * 100);
+
+					$secondAmount = floor($totalCents / 3);
+					$thirdAmount = floor($totalCents / 3);
+					$firstAmount = $totalCents - $secondAmount - $thirdAmount;
+
+					$today = new DateTime();
+					$secondDate = (clone $today)->modify('+1 month')->format('Y-m-d');
+					$thirdDate = (clone $today)->modify('+2 months')->format('Y-m-d');
+
+					$data['initialAmount'] = $firstAmount;
+
+					$data['terms'] = [
+						[
+							'date' => $secondDate,
+							'amount' => $secondAmount,
+						],
+						[
+							'date' => $thirdDate,
+							'amount' => $thirdAmount,
+						],
+					];
+				}
+			}
 
 			$bearerToken = get_option('helloasso_access_token_asso');
 			$isInTestMode = get_option('helloasso_testmode');

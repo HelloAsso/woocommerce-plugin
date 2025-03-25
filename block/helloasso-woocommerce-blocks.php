@@ -7,7 +7,6 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
 
 final class Helloasso_Blocks extends AbstractPaymentMethodType
 {
-
 	private $gateway;
 	protected $name = 'helloasso';
 
@@ -24,7 +23,6 @@ final class Helloasso_Blocks extends AbstractPaymentMethodType
 
 	public function get_payment_method_script_handles()
 	{
-
 		wp_register_script(
 			'wc-helloasso-blocks-integration',
 			plugin_dir_url(__FILE__) . 'checkout.js',
@@ -44,14 +42,18 @@ final class Helloasso_Blocks extends AbstractPaymentMethodType
 
 	public function get_payment_method_data()
 	{
+		$multi_enabled = isset($this->settings['multi_enabled']) && $this->settings['multi_enabled'] === 'yes';
+
+		$payment_choices = ['one_time'];
+		if ($multi_enabled) {
+			$payment_choices[] = 'three_times';
+		}
+
 		return [
 			'title' => $this->gateway->title,
-			/*'description' => '
-		   <div style="display: flex; align-items: center;">
-		   <img style="max-width: 50px; height:auto; margin-right: 8px;" src="assets/logo-ha.png" alt="HelloAsso Logo">
-			<p>' . wp_kses_post($this->gateway->description) . '</p>
-			</div>',,*/
 			'description' => $this->gateway->description,
+			'multi_enabled' => $multi_enabled,
+			'payment_choices' => $payment_choices
 		];
 	}
 }

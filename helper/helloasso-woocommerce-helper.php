@@ -1,8 +1,9 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
-function helloasso_generate_pkce() {
+function helloasso_generate_pkce()
+{
 	$randomBytes = random_bytes(32);
 	$codeVerifier = bin2hex($randomBytes);
 
@@ -20,7 +21,8 @@ function helloasso_generate_pkce() {
 }
 
 
-function helloasso_convert_country_code($country) {
+function helloasso_convert_country_code($country)
+{
 	$countries = array(
 		'AF' => 'AFG', //Afghanistan
 		'AX' => 'ALA', //&#197;land Islands
@@ -277,4 +279,32 @@ function helloasso_convert_country_code($country) {
 
 	$iso_code = isset($countries[$country]) ? $countries[$country] : $country;
 	return $iso_code;
+}
+
+function helloasso_find_payment_type_recursive($array)
+{
+	$payment_type = 'one_time';
+
+	if (!is_array($array)) {
+		return $payment_type;
+	}
+
+	if (isset($array['payment_type'])) {
+		return $array['payment_type'];
+	}
+
+	foreach ($array as $key => $value) {
+		if ($key === 'payment_type') {
+			return $value;
+		}
+
+		if (is_array($value)) {
+			$result = helloasso_find_payment_type_recursive($value);
+			if ($result !== 'one_time') {
+				return $result;
+			}
+		}
+	}
+
+	return $payment_type;
 }
