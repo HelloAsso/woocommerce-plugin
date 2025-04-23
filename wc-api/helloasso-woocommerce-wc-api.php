@@ -115,6 +115,13 @@ function helloasso_endpoint()
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
 function helloasso_endpoint_deco()
 {
+	$gateway_settings = get_option('woocommerce_helloasso_settings', array());
+	$gateway_settings['enabled'] = 'no';
+	$gateway_settings['multi_3_enabled'] = 'no';
+	$gateway_settings['multi_12_enabled'] = 'no';
+	$gateway_settings['testmode'] = 'no';
+	update_option('woocommerce_helloasso_settings', $gateway_settings);
+
 	delete_option('helloasso_access_token');
 	delete_option('helloasso_refresh_token');
 	delete_option('helloasso_token_expires_in');
@@ -128,6 +135,7 @@ function helloasso_endpoint_deco()
 	delete_option('helloasso_token_expires_in_asso');
 	delete_option('helloasso_refresh_token_expires_in_asso');
 	delete_option('helloasso_webhook_url');
+
 	echo wp_json_encode(array('success' => true, 'message' => 'Vous avez bien été déconnecté de votre compte HelloAsso'));
 	exit;
 }

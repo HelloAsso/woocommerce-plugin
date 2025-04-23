@@ -42,17 +42,22 @@ final class Helloasso_Blocks extends AbstractPaymentMethodType
 
 	public function get_payment_method_data()
 	{
-		$multi_enabled = isset($this->settings['multi_enabled']) && $this->settings['multi_enabled'] === 'yes';
+		$multi_3_enabled = isset($this->settings['multi_3_enabled']) && $this->settings['multi_3_enabled'] === 'yes';
+		$multi_12_enabled = isset($this->settings['multi_12_enabled']) && $this->settings['multi_12_enabled'] === 'yes';
 
 		$payment_choices = ['one_time'];
-		if ($multi_enabled) {
+		if ($multi_3_enabled) {
 			$payment_choices[] = 'three_times';
+		}
+		if ($multi_12_enabled) {
+			$payment_choices[] = 'twelve_times';
 		}
 
 		return [
 			'title' => $this->gateway->title,
 			'description' => $this->gateway->description,
-			'multi_enabled' => $multi_enabled,
+			'multi_3_enabled' => $multi_3_enabled,
+			'multi_12_enabled' => $multi_12_enabled,
 			'payment_choices' => $payment_choices
 		];
 	}

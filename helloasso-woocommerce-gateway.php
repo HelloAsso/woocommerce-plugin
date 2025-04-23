@@ -347,11 +347,19 @@ function helloasso_init_gateway_class()
 					'description' => '',
 					'default' => 'no'
 				),
-				'multi_enabled' => array(
-					'title' => 'Paiement en plusieurs fois',
+				'multi_3_enabled' => array(
+					'title' => 'Paiement en 3 fois',
 					'label' => 'Activer le paiement en 3 fois',
 					'type' => 'checkbox',
 					'description' => 'Cette option laissera le choix au payeur de réaliser son paiement en une ou trois fois.',
+					'default' => 'no',
+					'desc_tip' => true,
+				),
+				'multi_12_enabled' => array(
+					'title' => 'Paiement en 12 fois',
+					'label' => 'Activer le paiement en 12 fois',
+					'type' => 'checkbox',
+					'description' => 'Cette option laissera le choix au payeur de réaliser son paiement en une ou douze fois.',
 					'default' => 'no',
 					'desc_tip' => true,
 				),
@@ -665,7 +673,7 @@ function helloasso_init_gateway_class()
 				)
 			);
 
-			if ($this->get_option('multi_enabled') === 'yes') {
+			if ($this->get_option('multi_3_enabled') === 'yes' || $this->get_option('multi_12_enabled') === 'yes') {
 				$payment_type = 'one_time';
 
 				if (isset($_POST['payment_data']) && isset($_POST['payment_data']['payment_type'])) {
@@ -695,7 +703,7 @@ function helloasso_init_gateway_class()
 					}
 				}
 
-				$order->update_meta_data('helloasso_payment_type', $payment_type === 'three_times' ? '3 fois (prochaine écheance à suivre sur HelloAsso)' : 'une fois');
+				$order->update_meta_data('helloasso_payment_type', $payment_type === 'three_times' ? '3 fois (prochaine écheance à suivre sur HelloAsso)' : ($payment_type === 'twelve_times' ? '12 fois (prochaine écheance à suivre sur HelloAsso)' : 'une fois'));
 				$order->save();
 
 				if ($payment_type === 'three_times') {
@@ -721,6 +729,24 @@ function helloasso_init_gateway_class()
 							'amount' => $thirdAmount,
 						],
 					];
+				} elseif ($payment_type === 'twelve_times') {
+					$totalCents = round($total * 100);
+
+					$monthlyAmount = floor($totalCents / 12);
+					$firstAmount = $totalCents - ($monthlyAmount * 11);
+
+					$data['initialAmount'] = $firstAmount;
+
+					$data['terms'] = [];
+					$today = new DateTime();
+
+					for ($i = 1; $i <= 11; $i++) {
+						$paymentDate = (clone $today)->modify("+$i month")->format('Y-m-d');
+						$data['terms'][] = [
+							'date' => $paymentDate,
+							'amount' => $monthlyAmount,
+						];
+					}
 				}
 			}
 

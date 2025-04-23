@@ -58,12 +58,27 @@ const HelloassoContent = ({ eventRegistration }) => {
             )
         );
     }
+    if (paymentChoices.includes('twelve_times')) {
+        radioButtons.push(
+            createElement('label', { key: 'twelve_times', style: { display: 'block', marginBottom: '4px' } },
+                createElement('input', {
+                    type: 'radio',
+                    name: 'helloasso_payment_type',
+                    value: 'twelve_times',
+                    checked: selected === 'twelve_times',
+                    onChange: (e) => setSelected(e.target.value),
+                }),
+                ' ',
+                __('Paiement en 12 fois sans frais', 'wc-helloasso')
+            )
+        );
+    }
 
     return createElement(
         Fragment,
         null,
         createElement('p', null, description),
-        settings.multi_enabled && paymentChoices.length > 1 &&
+        (settings.multi_3_enabled || settings.multi_12_enabled) && paymentChoices.length > 1 &&
         createElement(
             'div',
             null,
