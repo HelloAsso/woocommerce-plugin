@@ -3,7 +3,7 @@ Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
-Tested up to: 6.7.2
+Tested up to: 6.8
 Requires PHP: 7.2.34
 Stable tag: 1.0.9
 License: GPLv3
@@ -97,7 +97,7 @@ Please report security bugs found in the source code of the helloasso plugin thr
 == Changelog ==
 
 = 1.0.9 =
-* Ajout du paiement en trois fois
+* Ajout du paiement en trois et douze fois
 
 = 1.0.8 =
 * Amélioration du process de connexion (bonne gestion des erreurs)
