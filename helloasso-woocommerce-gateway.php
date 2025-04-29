@@ -248,9 +248,9 @@ function helloasso_init_gateway_class()
 			} else {
 				$btnText = 'Enregistrer et se connecter à HelloAsso';
 			}
-			$styleTestMode = 'yes' === $this->get_option('testmode') ? '' : 'display: none;';
 
-			echo '<div id="testMode" style="' . esc_html($styleTestMode) . '"><p>
+			if ($this->get_option('testmode') === 'yes') {
+				echo '<div id="testMode"><p>
             Le mode test vous connectera avec l’environnement de test de HelloAsso (https://www.helloasso-sandbox.com).<br/> Vous pouvez y créer un compte pour tester la connexion.
             
             </p>
@@ -261,6 +261,24 @@ function helloasso_init_gateway_class()
 <p><i>Vous devrez vous reconnecter si vous changez de mode.</i></p>
             
             </div>';
+			}
+
+			if ($this->get_option('multi_3_enabled') === 'yes' || $this->get_option('multi_12_enabled') === 'yes') {
+				$multiMode = '';
+				if ($this->get_option('multi_3_enabled') === 'yes' && $this->get_option('multi_12_enabled') === 'yes') {
+					$multiMode = '3x ou 12x';
+				} else if ($this->get_option('multi_3_enabled') === 'yes') {
+					$multiMode = '3x';
+				} else if ($this->get_option('multi_12_enabled') === 'yes') {
+					$multiMode = '12x';
+				}
+
+				echo '<div id="multiMode"><p>
+				Le paiement en ' . $multiMode . ' s\'appliquera sur tous les paniers<br/>
+				Seul le premier paiement sera réalisé lors de la commande
+				</p>
+				</div>';
+			}
 
 			if ($isConnected) {
 				$organizationName = get_option('helloasso_organization_slug');
