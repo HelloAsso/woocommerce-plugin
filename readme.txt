@@ -3,9 +3,9 @@ Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
-Tested up to: 6.8
+Tested up to: 6.8.1
 Requires PHP: 7.2.34
-Stable tag: 1.0.9
+Stable tag: 1.0.10
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -95,6 +95,11 @@ Please report security bugs found in the source code of the helloasso plugin thr
 [youtube https://www.youtube.com/watch?v=yrv1_PIakac]
 
 == Changelog ==
+
+= 1.0.10 =
+* Affichage du paiement en trois et douze fois même avec le shortcode
+* Le paiement en trois et douze fois n'est plus proposé si le jour est > supérieur à 28
+* Correction sur le cron
 
 = 1.0.9 =
 * Ajout du paiement en trois et douze fois

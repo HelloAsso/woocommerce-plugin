@@ -46,18 +46,22 @@ final class Helloasso_Blocks extends AbstractPaymentMethodType
 		$multi_12_enabled = isset($this->settings['multi_12_enabled']) && $this->settings['multi_12_enabled'] === 'yes';
 
 		$payment_choices = ['one_time'];
-		if ($multi_3_enabled) {
+
+		$current_day = (int) current_time('j');
+		$can_show_multi_payment = $current_day <= 28;
+
+		if ($multi_3_enabled && $can_show_multi_payment) {
 			$payment_choices[] = 'three_times';
 		}
-		if ($multi_12_enabled) {
+		if ($multi_12_enabled && $can_show_multi_payment) {
 			$payment_choices[] = 'twelve_times';
 		}
 
 		return [
 			'title' => $this->gateway->title,
 			'description' => $this->gateway->description,
-			'multi_3_enabled' => $multi_3_enabled,
-			'multi_12_enabled' => $multi_12_enabled,
+			'multi_3_enabled' => $multi_3_enabled && $can_show_multi_payment,
+			'multi_12_enabled' => $multi_12_enabled && $can_show_multi_payment,
 			'payment_choices' => $payment_choices
 		];
 	}

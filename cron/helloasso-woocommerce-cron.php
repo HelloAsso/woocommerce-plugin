@@ -5,8 +5,8 @@ function hello_asso_cron_refresh_token()
 	helloasso_refresh_token_asso();
 }
 
-if (!wp_next_scheduled('hello_asso_cron_refresh_token__hook')) {
-	wp_schedule_event(strtotime('00:00:00'), 'daily', 'hello_asso_cron_refresh_token__hook');
+if (!wp_next_scheduled('hello_asso_cron_refresh_token_hook')) {
+	wp_schedule_event(strtotime('00:00:00'), 'daily', 'hello_asso_cron_refresh_token_hook');
 }
 
 function helloasso_refresh_token_asso()
@@ -56,4 +56,4 @@ function helloasso_refresh_token_asso()
 	}
 }
 
-add_action('cron_refresh_token_hello_asso__hook', 'cron_refresh_token_hello_asso');
+add_action('hello_asso_cron_refresh_token_hook', 'hello_asso_cron_refresh_token');

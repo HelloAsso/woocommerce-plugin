@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       HelloAsso Payments for WooCommerce
  * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
- * Version:           1.0.9
+ * Version:           1.0.10
  * Requires at least: 5.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
@@ -140,6 +140,48 @@ function helloasso_init_gateway_class()
 			$this->description = 'Le modèle solidaire de HelloAsso garantit que 100% de votre paiement sera versé à l’association choisie. Vous pouvez soutenir l’aide qu’ils apportent aux associations en laissant une contribution volontaire à HelloAsso au moment de votre paiement.';
 			$this->enabled = $this->get_option('enabled');
 			add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+		}
+
+		public function payment_fields()
+		{
+			if ($this->description) {
+				echo '<div style="display: flex; align-items: center;">';
+				echo '<img style="max-width: 50px; height:auto; margin-right: 16px;" src="/wp-content/plugins/helloasso-payments-for-woocommerce/assets/logo-ha.png" alt="HelloAsso Logo" />';
+				echo '<p>' . wp_kses_post($this->description) . '</p>';
+				echo '</div>';
+			}
+
+			$multi_3_enabled = $this->get_option('multi_3_enabled') === 'yes';
+			$multi_12_enabled = $this->get_option('multi_12_enabled') === 'yes';
+
+			$current_day = (int) current_time('j');
+			$can_show_multi_payment = $current_day <= 28;
+
+			if (($multi_3_enabled || $multi_12_enabled) && $can_show_multi_payment) {
+				echo '<div id="helloasso-payment-options">';
+				echo '<p><strong>Choisissez votre mode de paiement:</strong></p>';
+
+				echo '<label style="display: block; margin-bottom: 8px;">';
+				echo '<input type="radio" name="helloasso_payment_type" value="one_time" checked="checked" style="margin-right: 5px;" />';
+				echo 'Paiement comptant';
+				echo '</label>';
+
+				if ($multi_3_enabled) {
+					echo '<label style="display: block; margin-bottom: 8px;">';
+					echo '<input type="radio" name="helloasso_payment_type" value="three_times" style="margin-right: 5px;" />';
+					echo 'Paiement en 3 fois sans frais';
+					echo '</label>';
+				}
+
+				if ($multi_12_enabled) {
+					echo '<label style="display: block; margin-bottom: 8px;">';
+					echo '<input type="radio" name="helloasso_payment_type" value="twelve_times" style="margin-right: 5px;" />';
+					echo 'Paiement en 12 fois sans frais';
+					echo '</label>';
+				}
+
+				echo '</div>';
+			}
 		}
 
 		public function admin_options()
