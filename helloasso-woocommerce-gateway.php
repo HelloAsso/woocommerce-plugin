@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       HelloAsso Payments for WooCommerce
  * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
- * Version:           1.0.10
+ * Version:           1.0.11
  * Requires at least: 5.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
@@ -123,6 +123,11 @@ function helloasso_init_gateway_class()
 	{
 		public function __construct()
 		{
+			helloasso_log_info('Initialisation du gateway HelloAsso', array(
+				'plugin_version' => '1.0.11',
+				'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
+			));
+
 			$this->id = 'helloasso';
 			$this->icon = null;
 			$this->has_fields = true;
@@ -606,8 +611,26 @@ function helloasso_init_gateway_class()
 
 		public function process_payment($order_id)
 		{
+			helloasso_log_info('Début du traitement de paiement', array(
+				'order_id' => $order_id,
+				'user_id' => get_current_user_id(),
+				'payment_method' => 'helloasso'
+			));
+
 			helloasso_refresh_token_asso();
 			$order = wc_get_order($order_id);
+
+			if (!$order) {
+				helloasso_log_error('Commande introuvable', array('order_id' => $order_id));
+				return array('result' => 'failure', 'messages' => 'Commande introuvable');
+			}
+
+			helloasso_log_info('Récupération des données client', array(
+				'order_id' => $order_id,
+				'order_status' => $order->get_status(),
+				'order_total' => $order->get_total()
+			));
+
 			if (isset($_GET['pay_for_order'])) {
 				$firstName = $order->get_billing_first_name();
 				$lastName = $order->get_billing_last_name();
@@ -617,9 +640,17 @@ function helloasso_init_gateway_class()
 				$zipCode = $order->get_billing_postcode();
 				$countryIso = helloasso_convert_country_code($order->get_billing_country());
 				$company = $order->get_billing_company();
+
+				helloasso_log_debug('Données client récupérées depuis la commande existante', array(
+					'first_name' => $firstName,
+					'last_name' => $lastName,
+					'email' => $email,
+					'country' => $countryIso
+				));
 			} else {
 				if (isset($_POST['billing_first_name'])) {
 					if (!isset($_POST['woocommerce-process-checkout-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['woocommerce-process-checkout-nonce'])), 'woocommerce-process_checkout')) {
+						helloasso_log_error('Nonce invalide lors du checkout', array('order_id' => $order_id));
 						wc_add_notice('La commande ne peut être finalisé', 'error');
 					}
 
@@ -670,6 +701,13 @@ function helloasso_init_gateway_class()
 					} else {
 						$company = '';
 					}
+
+					helloasso_log_debug('Données client récupérées depuis POST', array(
+						'first_name' => $firstName,
+						'last_name' => $lastName,
+						'email' => $email,
+						'country' => $countryIso
+					));
 				} else {
 					$json = file_get_contents('php://input');
 					$data = json_decode($json, true);
@@ -682,12 +720,25 @@ function helloasso_init_gateway_class()
 					$zipCode = $data['billing_address']['postcode'];
 					$countryIso = helloasso_convert_country_code($data['billing_address']['country']);
 					$company = $data['billing_address']['company'];
+
+					helloasso_log_debug('Données client récupérées depuis JSON', array(
+						'first_name' => $firstName,
+						'last_name' => $lastName,
+						'email' => $email,
+						'country' => $countryIso
+					));
 				}
 			}
 
 
 			$items = $order->get_items();
 			$total = $order->get_total();
+
+			helloasso_log_info('Préparation des données de paiement', array(
+				'order_id' => $order_id,
+				'total' => $total,
+				'items_count' => count($items)
+			));
 
 			$woocommerceOrderId = $order_id;
 			$userId = $order->get_user_id();
@@ -763,6 +814,13 @@ function helloasso_init_gateway_class()
 					}
 				}
 
+				helloasso_log_info('Type de paiement détecté', array(
+					'order_id' => $order_id,
+					'payment_type' => $payment_type,
+					'multi_3_enabled' => $this->get_option('multi_3_enabled'),
+					'multi_12_enabled' => $this->get_option('multi_12_enabled')
+				));
+
 				$order->update_meta_data('helloasso_payment_type', $payment_type === 'three_times' ? '3 fois (prochaine écheance à suivre sur HelloAsso)' : ($payment_type === 'twelve_times' ? '12 fois (prochaine écheance à suivre sur HelloAsso)' : 'une fois'));
 				$order->save();
 
@@ -789,6 +847,13 @@ function helloasso_init_gateway_class()
 							'amount' => $thirdAmount,
 						],
 					];
+
+					helloasso_log_info('Paiement en 3 fois configuré', array(
+						'order_id' => $order_id,
+						'first_amount' => $firstAmount,
+						'second_amount' => $secondAmount,
+						'third_amount' => $thirdAmount
+					));
 				} elseif ($payment_type === 'twelve_times') {
 					$totalCents = round($total * 100);
 
@@ -807,11 +872,24 @@ function helloasso_init_gateway_class()
 							'amount' => $monthlyAmount,
 						];
 					}
+
+					helloasso_log_info('Paiement en 12 fois configuré', array(
+						'order_id' => $order_id,
+						'first_amount' => $firstAmount,
+						'monthly_amount' => $monthlyAmount
+					));
 				}
 			}
 
 			$bearerToken = get_option('helloasso_access_token_asso');
 			$isInTestMode = get_option('helloasso_testmode');
+
+			helloasso_log_info('Configuration API HelloAsso', array(
+				'order_id' => $order_id,
+				'test_mode' => $isInTestMode,
+				'has_token' => !empty($bearerToken),
+				'organization_slug' => get_option('helloasso_organization_slug')
+			));
 
 			if ('yes' === $isInTestMode) {
 				$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
@@ -820,13 +898,54 @@ function helloasso_init_gateway_class()
 			}
 
 			$url = $api_url . 'v5/organizations/' . get_option('helloasso_organization_slug') . '/checkout-intents';
+
+			helloasso_log_info('Appel API HelloAsso', array(
+				'order_id' => $order_id,
+				'url' => $url,
+				'api_url' => $api_url
+			));
+
 			$response = wp_remote_post($url, helloasso_get_args_post_token($data, $bearerToken));
 
 			if (is_wp_error($response)) {
+				helloasso_log_error('Erreur lors de l\'appel API HelloAsso', array(
+					'order_id' => $order_id,
+					'error' => $response->get_error_message(),
+					'error_code' => $response->get_error_code()
+				));
 				echo 'Erreur : ' . esc_html($response->get_error_message());
 			}
 
 			$response_body = wp_remote_retrieve_body($response);
+			$response_code = wp_remote_retrieve_response_code($response);
+
+			helloasso_log_info('Réponse API HelloAsso reçue', array(
+				'order_id' => $order_id,
+				'response_code' => $response_code,
+				'response_body_length' => strlen($response_body)
+			));
+
+			if ($response_code !== 200) {
+				helloasso_log_error('Erreur API HelloAsso', array(
+					'order_id' => $order_id,
+					'response_code' => $response_code,
+					'response_body' => $response_body
+				));
+			}
+
+			$response_data = json_decode($response_body);
+
+			if (!$response_data || !isset($response_data->redirectUrl)) {
+				helloasso_log_error('Réponse API invalide', array(
+					'order_id' => $order_id,
+					'response_body' => $response_body
+				));
+			}
+
+			helloasso_log_info('Paiement traité avec succès', array(
+				'order_id' => $order_id,
+				'redirect_url' => $response_data->redirectUrl ?? 'unknown'
+			));
 
 			return array(
 				'result' => 'success',

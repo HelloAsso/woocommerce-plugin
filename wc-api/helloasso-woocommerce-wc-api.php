@@ -6,7 +6,13 @@ if (! defined('ABSPATH')) {
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 function helloasso_endpoint()
 {
+	helloasso_log_info('Endpoint HelloAsso appelé', array(
+		'endpoint' => 'helloasso',
+		'get_params' => $_GET
+	));
+
 	if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect_return')) {
+		helloasso_log_error('Nonce invalide dans endpoint helloasso', array('get_params' => $_GET));
 		wp_safe_redirect(get_site_url());
 		exit;
 	} else {
@@ -28,6 +34,7 @@ function helloasso_endpoint()
 	$nonce = wp_create_nonce('helloasso_connect');
 
 	if (!isset($_GET['code']) || !isset($_GET['state'])) {
+		helloasso_log_error('Code ou state manquant dans endpoint helloasso', array('get_params' => $_GET));
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
 		exit;
 	}
@@ -36,7 +43,10 @@ function helloasso_endpoint()
 	$state = sanitize_text_field($_GET['state']);
 
 	if (get_option('helloasso_state') !== $state) {
-
+		helloasso_log_error('State invalide dans endpoint helloasso', array(
+			'received_state' => $state,
+			'expected_state' => get_option('helloasso_state')
+		));
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
 		exit;
 	}
@@ -52,10 +62,19 @@ function helloasso_endpoint()
 		'code_verifier' => get_option('helloasso_code_verifier')
 	);
 
+	helloasso_log_info('Demande de token OAuth2', array(
+		'url' => $url,
+		'test_mode' => $isInTestMode
+	));
+
 	$response = wp_remote_post($url, helloasso_get_args_post_urlencode($data));
 
 	$status_code = wp_remote_retrieve_response_code($response);
 	if (200 !== $status_code) {
+		helloasso_log_error('Erreur lors de la demande de token OAuth2', array(
+			'status_code' => $status_code,
+			'response_body' => wp_remote_retrieve_body($response)
+		));
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&status_code=' . $status_code . '&nonce=' . $nonce);
 		exit;
 	}
@@ -64,6 +83,11 @@ function helloasso_endpoint()
 	$data = json_decode($response_body);
 
 	if (isset($data->access_token)) {
+		helloasso_log_info('Token OAuth2 reçu avec succès', array(
+			'organization_slug' => $data->organization_slug ?? 'unknown',
+			'expires_in' => $data->expires_in ?? 'unknown'
+		));
+
 		delete_option('helloasso_access_token_asso');
 		delete_option('helloasso_refresh_token_asso');
 		delete_option('helloasso_token_expires_in_asso');
@@ -81,10 +105,20 @@ function helloasso_endpoint()
 			'url' => get_site_url() . '/wc-api/helloasso_webhook'
 		);
 
+		helloasso_log_info('Configuration du webhook', array(
+			'webhook_url' => $dataNotifSend['url'],
+			'organization_slug' => $data->organization_slug
+		));
+
 		$responseNotif = wp_remote_request($urlNotif, helloasso_get_args_put_token($dataNotifSend, $data->access_token));
 
 		$status_code = wp_remote_retrieve_response_code($responseNotif);
 		if (200 !== $status_code) {
+			helloasso_log_error('Erreur lors de la configuration du webhook', array(
+				'status_code' => $status_code,
+				'response_body' => wp_remote_retrieve_body($responseNotif)
+			));
+
 			$gateway_settings = get_option('woocommerce_helloasso_settings', array());
 			$gateway_settings['enabled'] = 'no';
 			update_option('woocommerce_helloasso_settings', $gateway_settings);
@@ -104,6 +138,10 @@ function helloasso_endpoint()
 
 		delete_option('helloasso_webhook_url');
 		add_option('helloasso_webhook_url', get_site_url() . '/wc-api/helloasso_webhook');
+
+		helloasso_log_info('Connexion HelloAsso réussie', array(
+			'organization_slug' => $data->organization_slug
+		));
 
 		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=success_connect&nonce=' . $nonce);
 		exit;
@@ -146,15 +184,31 @@ function helloasso_endpoint_webhook()
 	$raw_input = file_get_contents('php://input');
 	$data = json_decode($raw_input, true);
 
+	helloasso_log_info('Webhook HelloAsso reçu', array(
+		'event_type' => $data['eventType'] ?? 'unknown',
+		'raw_data_length' => strlen($raw_input)
+	));
+
 	add_option('helloasso_webhook_data', wp_json_encode($data));
 
 	if ('Order' === $data['eventType']) {
+		helloasso_log_info('Traitement d\'un événement Order', array(
+			'order_reference' => $data['metadata']['reference'] ?? 'unknown',
+			'checkout_intent_id' => $data['data']['checkoutIntentId'] ?? 'unknown'
+		));
 		validate_order($data['metadata']['reference'], $data['data']['checkoutIntentId']);
 	} else if ('Organization' === $data['eventType']) {
+		helloasso_log_info('Traitement d\'un événement Organization', array(
+			'new_slug' => $data['data']['new_slug_organization'] ?? 'unknown'
+		));
 		delete_option('helloasso_organization_slug');
 		add_option('helloasso_organization_slug', $data['data']['new_slug_organization']);
 
 		helloasso_refresh_token_asso();
+	} else {
+		helloasso_log_warning('Événement webhook non reconnu', array(
+			'event_type' => $data['eventType'] ?? 'unknown'
+		));
 	}
 
 	exit;
@@ -180,10 +234,22 @@ function helloasso_endpoint_order()
 
 function validate_order($orderId, $checkoutIntentId)
 {
+	helloasso_log_info('Début de validation de commande', array(
+		'order_id' => $orderId,
+		'checkout_intent_id' => $checkoutIntentId
+	));
+
 	$order = wc_get_order($orderId);
 	if (!$order) {
+		helloasso_log_error('Commande introuvable lors de la validation', array('order_id' => $orderId));
 		exit;
 	}
+
+	helloasso_log_info('Commande trouvée', array(
+		'order_id' => $orderId,
+		'order_status' => $order->get_status(),
+		'order_total' => $order->get_total()
+	));
 
 	$isInTestMode = get_option('helloasso_testmode');
 	if ('yes' === $isInTestMode) {
@@ -197,14 +263,62 @@ function validate_order($orderId, $checkoutIntentId)
 	$slug = get_option('helloasso_organization_slug');
 	$helloasso_access_token_asso = get_option('helloasso_access_token_asso');
 
-	$response = wp_remote_request($api_url . 'v5/organizations/' . $slug . '/checkout-intents/' . $checkoutIntentId, helloasso_get_args_get_token($helloasso_access_token_asso));
+	helloasso_log_info('Récupération des détails de la commande HelloAsso', array(
+		'order_id' => $orderId,
+		'organization_slug' => $slug,
+		'api_url' => $api_url,
+		'has_token' => !empty($helloasso_access_token_asso)
+	));
+
+	$url = $api_url . 'v5/organizations/' . $slug . '/checkout-intents/' . $checkoutIntentId;
+	$response = wp_remote_request($url, helloasso_get_args_get_token($helloasso_access_token_asso));
+
+	$response_code = wp_remote_retrieve_response_code($response);
 	$body = wp_remote_retrieve_body($response);
+
+	helloasso_log_info('Réponse API HelloAsso pour validation', array(
+		'order_id' => $orderId,
+		'response_code' => $response_code,
+		'response_length' => strlen($body)
+	));
+
+	if ($response_code !== 200) {
+		helloasso_log_error('Erreur lors de la récupération des détails de commande', array(
+			'order_id' => $orderId,
+			'response_code' => $response_code,
+			'response_body' => $body
+		));
+		return $order;
+	}
+
 	$haOrder = json_decode($body);
 
-	if ($haOrder->order->payments[0]->state == 'Authorized') {
+	if (!$haOrder || !isset($haOrder->order) || !isset($haOrder->order->payments) || empty($haOrder->order->payments)) {
+		helloasso_log_error('Structure de réponse HelloAsso invalide', array(
+			'order_id' => $orderId,
+			'response_body' => $body
+		));
+		return $order;
+	}
+
+	$payment_state = $haOrder->order->payments[0]->state ?? 'unknown';
+
+	helloasso_log_info('État du paiement HelloAsso', array(
+		'order_id' => $orderId,
+		'payment_state' => $payment_state
+	));
+
+	if ($payment_state == 'Authorized') {
+		helloasso_log_info('Paiement autorisé - marquage de la commande comme payée', array('order_id' => $orderId));
 		$order->payment_complete();
-	} else if ($haOrder->order->payments[0]->state == 'Refused') {
+	} else if ($payment_state == 'Refused') {
+		helloasso_log_info('Paiement refusé - marquage de la commande comme échouée', array('order_id' => $orderId));
 		$order->update_status('failed');
+	} else {
+		helloasso_log_warning('État de paiement non géré', array(
+			'order_id' => $orderId,
+			'payment_state' => $payment_state
+		));
 	}
 
 	return $order;

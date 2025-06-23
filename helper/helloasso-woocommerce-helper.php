@@ -2,6 +2,49 @@
 if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
+
+function helloasso_log($message, $level = 'info', $context = array())
+{
+	if (!function_exists('wc_get_logger')) {
+		return;
+	}
+
+	$logger = wc_get_logger();
+	$context['source'] = 'helloasso-woocommerce';
+	$context['timestamp'] = current_time('Y-m-d H:i:s');
+	$context['memory_usage'] = memory_get_usage(true);
+	$context['peak_memory'] = memory_get_peak_usage(true);
+
+	$log_message = sprintf(
+		'[%s] %s - %s',
+		strtoupper($level),
+		$message,
+		!empty($context) ? json_encode($context, JSON_UNESCAPED_UNICODE) : ''
+	);
+
+	$logger->log($level, $log_message, $context);
+}
+
+function helloasso_log_error($message, $context = array())
+{
+	helloasso_log($message, 'error', $context);
+}
+
+function helloasso_log_info($message, $context = array())
+{
+	helloasso_log($message, 'info', $context);
+}
+
+function helloasso_log_debug($message, $context = array())
+{
+	helloasso_log($message, 'debug', $context);
+}
+
+function helloasso_log_warning($message, $context = array())
+{
+	helloasso_log($message, 'warning', $context);
+}
+
 function helloasso_generate_pkce()
 {
 	$randomBytes = random_bytes(32);
