@@ -333,7 +333,7 @@ function helloasso_init_gateway_class()
 				$mode = $this->get_option('testmode') === 'yes' ? 'test' : 'production';
 				$url = "https://admin.helloasso{$environment}.com/" . esc_html($organizationName) . "/accueil";
 
-				echo "<p><strong>Connecté avec <a href='" . esc_html($url) . "}' target='_blank'>" . esc_html($organizationName) . "</a> en mode " . esc_html($mode) . "</strong></p>";
+				echo "<p><strong>Connecté avec <a href='" . esc_html($url) . "' target='_blank'>" . esc_html($organizationName) . "</a> en mode " . esc_html($mode) . "</strong></p>";
 
 				echo '<a href="javascript:void(0)" id="decoHelloAsso">Se déconnecter de mon asso</a>';
 			}
