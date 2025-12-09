@@ -1,0 +1,16 @@
+{
+    "name": "helloasso/helloasso-payments-for-woocommerce",
+    "description": "Hello Asso Payments Gateway for WooCommerce",
+    "license": "GPL-3.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Helloasso\\HelloassoPaymentsForWoocommerce\\": "inc/"
+        }
+    },
+    "authors": [
+        {
+            "name": "helloasso"
+        }
+    ],
+    "require": {}
+}
