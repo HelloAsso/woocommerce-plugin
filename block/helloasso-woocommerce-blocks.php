@@ -14,11 +14,12 @@ final class Helloasso_Blocks extends AbstractPaymentMethodType
 		$this->settings = get_option('woocommerce_helloasso_settings', []);
 	
 		$this->gateway =WC_Payment_Gateways::instance()->payment_gateways()[$this->name];
+		
 	}
 
 	public function is_active()
 	{
-		return $this->gateway->is_available();
+		return $this->gateway->is_available() && get_option('helloasso_access_token_asso');
 	}
 
 	public function get_payment_method_script_handles()

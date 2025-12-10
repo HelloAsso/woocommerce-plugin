@@ -24,7 +24,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		$this->has_fields = true;
 		$this->method_title = 'Payer par carte bancaire avec HelloAsso';
 		$this->method_description = 'Acceptez des paiements gratuitement avec HelloAsso (0 frais, 0 commission pour votre association).';
-		$this->isConnected =false;
+		$this->isConnected = false;
 		$this->supports = array(
 			'products'
 		);
@@ -84,7 +84,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	{
 		// Check if we have helloasso_access_token_asso in the options
 		if (get_option('helloasso_access_token_asso')) {
-				$this->isConnected = true;
+			$this->isConnected = true;
 		}
 
 		if (isset($_GET['nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
@@ -104,11 +104,19 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 					}
 				}
 
-				if (isset($msg) && 'success_connect' === $msg) {
+				if (isset($msg) && 'success_connect' === $msg && $this->isConnected) {
+					
 					echo '<div class="notice notice-success is-dismissible">
 					<p>Connexion à HelloAsso réussie.</p>
 					</div>';
 				}
+				if(!$this->isConnected) {
+					echo '<div class="notice notice-error is-dismissible">
+					<p>La connexion à HelloAsso est incomplète. Veuillez réessayer.</p>
+					</div>';
+
+				}
+		
 			}
 		}
 
@@ -230,9 +238,16 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 
 		$enabled = 	$this->isConnected ? 1 : 0;
 		$testmode = get_option('helloasso_testmode') === 'yes' ? 1 : 0;
-
 		echo '<script defer>
 			jQuery(document).ready(function($) {
+				if (!' .  ($this->isConnected ? 'true' : 'false') . ') {
+					$("#woocommerce_helloasso_enabled").prop("checked", false);
+				}
+			});
+		</script>';
+		echo '<script defer>
+			jQuery(document).ready(function($) {
+			
 				$("#woocommerce_helloasso_enabled, #woocommerce_helloasso_testmode").change(function() {
 					var enabled = $("#woocommerce_helloasso_enabled").is(":checked") ? 1 : 0;
 					var testmode = $("#woocommerce_helloasso_testmode").is(":checked") ? 1 : 0;
