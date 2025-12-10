@@ -313,7 +313,7 @@ function validate_order($orderId, $checkoutIntentId)
 		helloasso_log_info('Paiement autorisé - marquage de la commande comme payée', array('order_id' => $orderId));
 		$order->payment_complete();
 		if($paymentReceiptUrl){
-			$order->add_order_note('Paiement HelloAsso autorisé.<br> Attestation de paiement : <a  target="_blank" href="' . $paymentReceiptUrl . '">' . $paymentReceiptUrl . '</a>');
+			$order->add_order_note('Paiement HelloAsso autorisé.<br>  <a  target="_blank" href="' . $paymentReceiptUrl . '">Attestation de paiement</a>');
 		}
 		else{
 		$order->add_order_note('Paiement HelloAsso autorisé.');
