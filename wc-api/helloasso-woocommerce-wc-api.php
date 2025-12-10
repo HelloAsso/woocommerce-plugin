@@ -311,9 +311,11 @@ function validate_order($orderId, $checkoutIntentId)
 	if ($payment_state == 'Authorized') {
 		helloasso_log_info('Paiement autorisé - marquage de la commande comme payée', array('order_id' => $orderId));
 		$order->payment_complete();
+		$order->add_order_note('Paiement HelloAsso autorisé.');
 	} else if ($payment_state == 'Refused') {
 		helloasso_log_info('Paiement refusé - marquage de la commande comme échouée', array('order_id' => $orderId));
 		$order->update_status('failed');
+		$order->add_order_note('Paiement HelloAsso refusé.');
 	} else {
 		helloasso_log_warning('État de paiement non géré', array(
 			'order_id' => $orderId,

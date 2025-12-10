@@ -10,7 +10,6 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	 */
 	public $isConnected;
 
-		private static $initialized = false;
 
 	public function __construct()
 	{		
@@ -96,19 +95,19 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				if (isset($msg) && 'error_connect' === $msg) {
 					if (isset($_GET['status_code']) && '403' === $_GET['status_code']) {
 						echo '<div class="notice notice-error is-dismissible">
-		<p>Erreur lors de la connexion à HelloAsso. Veuillez <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a>. (Erreur 403)</p>
-		</div>';
+							<p>Erreur lors de la connexion à HelloAsso. Veuillez <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a>. (Erreur 403)</p>
+							</div>';
 					} else {
 						echo '<div class="notice notice-error is-dismissible">
-		<p>Erreur lors de la connexion à HelloAsso. Veuillez réessayer.</p>
-		</div>';
+							<p>Erreur lors de la connexion à HelloAsso. Veuillez réessayer.</p>
+							</div>';
 					}
 				}
 
 				if (isset($msg) && 'success_connect' === $msg) {
 					echo '<div class="notice notice-success is-dismissible">
-		<p>Connexion à HelloAsso réussie.</p>
-		</div>';
+					<p>Connexion à HelloAsso réussie.</p>
+					</div>';
 				}
 			}
 		}
@@ -194,9 +193,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		</p>
 		<p><i>
 		Pour réaliser des paiements, vous pouvez utiliser les cartes de test suivantes : 4242 4242 4242 4242 ou 5017 6791 1038 0400, puis utiliser un CCV aléatoire et une date d’expiration ultérieure à la date actuelle.
-	</i></p>
+		</i></p>
 
-	<p><i>Vous devrez vous reconnecter si vous changez de mode.</i></p>
+		<p><i>Vous devrez vous reconnecter si vous changez de mode.</i></p>
 			
 		</div>';
 		}
@@ -218,7 +217,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			</div>';
 		}
 
-	if ($this->isConnected) {
+		if ($this->isConnected) {
 			$organizationName = get_option('helloasso_organization_slug');
 			$environment = ($this->get_option('testmode') === 'yes' ? '-sandbox' : '');
 			$mode = $this->get_option('testmode') === 'yes' ? 'test' : 'production';
@@ -265,7 +264,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		echo '<script defer>
 		jQuery(document).ready(function($) {
 
-			$(".woocommerce-save-button").html(`   <img src="' . esc_html(plugins_url('assets/logo-ha.svg', __DIR__)) . '" alt=""
+			$(".woocommerce-save-button").html(`   <img src="' . esc_html(plugins_url('../assets/logo-ha.svg', __DIR__)) . '" alt=""
 			class="HaAuthorizeButtonLogo">
 			<span class="HaAuthorizeButtonTitle">' . esc_html($btnText) . '</span>`);
 			$(".woocommerce-save-button").addClass("HaAuthorizeButton");
@@ -675,8 +674,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			)
 		);
 
+		$payment_type = 'one_time';
 		if ($this->get_option('multi_3_enabled') === 'yes' || $this->get_option('multi_12_enabled') === 'yes') {
-			$payment_type = 'one_time';
 
 			if (isset($_POST['payment_data']) && isset($_POST['payment_data']['payment_type'])) {
 				$payment_type = sanitize_text_field($_POST['payment_data']['payment_type']);
@@ -713,6 +712,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			));
 
 			$order->update_meta_data('helloasso_payment_type', $payment_type === 'three_times' ? '3 fois (prochaine écheance à suivre sur HelloAsso)' : ($payment_type === 'twelve_times' ? '12 fois (prochaine écheance à suivre sur HelloAsso)' : 'une fois'));
+
+		
 			$order->save();
 
 			if ($payment_type === 'three_times') {
@@ -722,7 +723,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				$thirdAmount = floor($totalCents / 3);
 				$firstAmount = $totalCents - $secondAmount - $thirdAmount;
 
-				$today = new DateTime();
+				$today = new \DateTime();
 				$secondDate = (clone $today)->modify('+1 month')->format('Y-m-d');
 				$thirdDate = (clone $today)->modify('+2 months')->format('Y-m-d');
 
@@ -754,7 +755,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				$data['initialAmount'] = $firstAmount;
 
 				$data['terms'] = [];
-				$today = new DateTime();
+				$today = new \DateTime();
 
 				for ($i = 1; $i <= 11; $i++) {
 					$paymentDate = (clone $today)->modify("+$i month")->format('Y-m-d');
@@ -771,7 +772,15 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				));
 			}
 		}
-
+		$payment_type_translated = $payment_type === 'three_times' ? '3 fois' : ($payment_type === 'twelve_times' ? '12 fois' : 'une fois');
+		$order->add_order_note(
+			sprintf(
+				'Paiement HelloAsso initié. Type: %s',
+				$payment_type_translated,
+				
+				
+			)
+		);
 		$bearerToken = get_option('helloasso_access_token_asso');
 		$isInTestMode = get_option('helloasso_testmode');
 
@@ -839,6 +848,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'order_id' => $order_id,
 			'redirect_url' => $response_data->redirectUrl ?? 'unknown'
 		));
+
+		
+			$order->save();
 
 		return array(
 			'result' => 'success',
