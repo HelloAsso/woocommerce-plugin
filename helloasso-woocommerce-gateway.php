@@ -7,6 +7,7 @@
  * Requires at least: 5.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
+ * Requires Plugins:  woocommerce
  * Author:            HelloAsso
  * Author URI:        https://helloasso.com
  * License:           GPLv3

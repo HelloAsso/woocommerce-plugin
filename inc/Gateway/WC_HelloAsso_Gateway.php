@@ -14,10 +14,10 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	public function __construct()
 	{		
 
-		// helloasso_log_info('Initialisation du gateway HelloAsso', array(
-		// 	'plugin_version' => '1.0.11',
-		// 	'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
-		// ));
+		helloasso_log_info('Initialisation du gateway HelloAsso', array(
+			'plugin_version' => '1.0.2',
+			'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
+		));
 
 		$this->id = 'helloasso';
 		$this->icon = null;
@@ -838,7 +838,6 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'order_id' => $order_id,
 			'response_code' => $response_code,
 			'response_body_length' => strlen($response_body),
-			'response_body' => $response_body
 		));
 
 		if ($response_code !== 200) {
