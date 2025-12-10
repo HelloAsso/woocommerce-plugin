@@ -99,7 +99,7 @@ Please report security bugs found in the source code of the helloasso plugin thr
 = 1.0.2 =
 * Vérification supplémentaires sur la connexion à l'api HelloAsso
 * Ajout de notes dans la commande pour le suivi des étapes de paiement
-
+* Compatibilité avec la version 6.9 de Wordpress
 = 1.0.11 =
 * Ajout de logs pour faciliter le debug
 
