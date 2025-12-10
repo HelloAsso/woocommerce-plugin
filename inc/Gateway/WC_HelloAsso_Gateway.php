@@ -775,7 +775,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		$payment_type_translated = $payment_type === 'three_times' ? '3 fois' : ($payment_type === 'twelve_times' ? '12 fois' : 'une fois');
 		$order->add_order_note(
 			sprintf(
-				'Paiement HelloAsso initié. Type: %s',
+				'Paiement HelloAsso initié.<br> Type: %s',
 				$payment_type_translated,
 				
 				

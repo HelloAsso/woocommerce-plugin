@@ -302,16 +302,23 @@ function validate_order($orderId, $checkoutIntentId)
 	}
 
 	$payment_state = $haOrder->order->payments[0]->state ?? 'unknown';
-
+	$paymentReceiptUrl = $haOrder->order->payments[0]->paymentReceiptUrl ?? false;
 	helloasso_log_info('État du paiement HelloAsso', array(
 		'order_id' => $orderId,
-		'payment_state' => $payment_state
+		'payment_state' => $payment_state,
+		'paymentReceiptUrl' => $paymentReceiptUrl
 	));
 
 	if ($payment_state == 'Authorized') {
 		helloasso_log_info('Paiement autorisé - marquage de la commande comme payée', array('order_id' => $orderId));
 		$order->payment_complete();
+		if($paymentReceiptUrl){
+			$order->add_order_note('Paiement HelloAsso autorisé.<br> Attestation de paiement : <a  target="_blank" href="' . $paymentReceiptUrl . '">' . $paymentReceiptUrl . '</a>');
+		}
+		else{
 		$order->add_order_note('Paiement HelloAsso autorisé.');
+
+		}
 	} else if ($payment_state == 'Refused') {
 		helloasso_log_info('Paiement refusé - marquage de la commande comme échouée', array('order_id' => $orderId));
 		$order->update_status('failed');
@@ -325,3 +332,4 @@ function validate_order($orderId, $checkoutIntentId)
 
 	return $order;
 }
+
