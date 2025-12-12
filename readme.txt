@@ -5,7 +5,7 @@ Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2.34
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
