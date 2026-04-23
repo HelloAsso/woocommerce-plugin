@@ -3,6 +3,9 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
+// Durée de validité du refresh token : 30 jours en secondes
+define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+
 function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 {
 	helloasso_log_debug('Vérification du token OAuth2', array(
@@ -59,8 +62,8 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 		if (isset($data->access_token)) {
 			update_option('helloasso_access_token', $data->access_token);
 			update_option('helloasso_refresh_token', $data->refresh_token);
-			update_option('helloasso_token_expires_in', $data->expires_in);
-			update_option('helloasso_refresh_token_expires_in', time() + 2629800);
+			update_option('helloasso_token_expires_in', time() + $data->expires_in);
+			update_option('helloasso_refresh_token_expires_in', time() + HELLOASSO_REFRESH_TOKEN_LIFETIME);
 
 			helloasso_log_info('Token OAuth2 rafraîchi avec succès', array(
 				'new_token_preview' => substr($data->access_token, 0, 10) . '...',
@@ -112,8 +115,8 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 		if (isset($data->access_token)) {
 			add_option('helloasso_access_token', $data->access_token);
 			add_option('helloasso_refresh_token', $data->refresh_token);
-			add_option('helloasso_token_expires_in', $data->expires_in);
-			add_option('helloasso_refresh_token_expires_in', time() + 2629800);
+			add_option('helloasso_token_expires_in', time() + $data->expires_in);
+			add_option('helloasso_refresh_token_expires_in', time() + HELLOASSO_REFRESH_TOKEN_LIFETIME);
 
 			helloasso_log_info('Nouveau token OAuth2 obtenu avec succès', array(
 				'token_preview' => substr($data->access_token, 0, 10) . '...',
