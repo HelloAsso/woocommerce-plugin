@@ -5,13 +5,19 @@ Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2.34
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 
 L’extension **HelloAsso Payments for WooCommerce**, votre **solution de paiement gratuite** pour
 votre boutique associative.
+
+== Ajouter une version du plugin sur wordpress ==
+Une fois la PR mergé
+Ajouter un tag :
+git tag -a v1.1.1 -m "Version 1.1.1 : Décrire les nouveautés de la version"
+git push --tags
 
 == Description ==
 
@@ -96,7 +102,7 @@ Please report security bugs found in the source code of the helloasso plugin thr
 
 == Changelog ==
 
-= 1.1.1 =
+= 1.1.2 =
 
 * Fix contrôle d'expiration des refresh tokens
 
