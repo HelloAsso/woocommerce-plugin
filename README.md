@@ -7,10 +7,17 @@ L'extension HelloAsso Payments for WooCommerce vous permet d'ajouter HelloAsso c
 Dans votre tableau de bord WordPress, accédez à « Extensions » > « Ajouter ».
 Dans la barre de recherche, tapez « HelloAsso Payments for WooCommerce ».
 Localisez l'extension dans les résultats de recherche, cliquez sur « Installer », puis sur « Activer ».
+
 ### Configuration de l'extension
 Après activation, accédez à « WooCommerce » > « Réglages » > « Paiements ».
 Activez le mode de paiement « HelloAsso » et cliquez sur « Configurer ».
 Suivez les instructions pour lier votre compte HelloAsso existant ou en créer un nouveau.
+
+### Ajouter une version du plugin sur wordpress 
+Une fois la PR mergé
+Ajouter un tag :
+git tag -a v1.1.1 -m "Version 1.1.1 : Décrire les nouveautés de la version"
+git push --tags
 
 ## À propos de HelloAsso
 HelloAsso est la solution gratuite dédiée aux associations pour collecter des paiements et des dons en ligne. Plus de 300 000 associations françaises nous font confiance pour financer leurs projets grâce à divers outils :
