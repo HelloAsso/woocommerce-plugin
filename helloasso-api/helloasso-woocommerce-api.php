@@ -1,8 +1,8 @@
 <?php
-if (! defined('ABSPATH')) {
+
+if (!defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
-
 
 function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 {
@@ -16,7 +16,10 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 	$token_expires_in = get_option('helloasso_token_expires_in');
 	$refresh_token_expires_in = get_option('helloasso_refresh_token_expires_in');
 
-	if ($access_token && time() < $token_expires_in) {
+	$token_expires_in = is_numeric($token_expires_in) ? (int) $token_expires_in : 0;
+	$refresh_token_expires_in = is_numeric($refresh_token_expires_in) ? (int) $refresh_token_expires_in : 0;
+
+	if (is_string($access_token) && time() < $token_expires_in) {
 		helloasso_log_debug('Token OAuth2 encore valide', array(
 			'token_preview' => substr($access_token, 0, 10) . '...',
 			'expires_in' => $token_expires_in - time()
@@ -24,7 +27,7 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 		return $access_token;
 	}
 
-	if ($refresh_token && time() < $refresh_token_expires_in) {
+	if (is_string($refresh_token) && time() < $refresh_token_expires_in) {
 		helloasso_log_info('Rafraîchissement du token OAuth2', array(
 			'refresh_token_preview' => substr($refresh_token, 0, 10) . '...'
 		));
@@ -50,6 +53,8 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 
 		$response_body = wp_remote_retrieve_body($response);
 		$response_code = wp_remote_retrieve_response_code($response);
+
+		/** @var object{access_token?: string, refresh_token?: string, expires_in?: int|string} $data */
 		$data = json_decode($response_body);
 
 		helloasso_log_info('Réponse rafraîchissement token OAuth2', array(
@@ -57,15 +62,19 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 			'has_access_token' => isset($data->access_token)
 		));
 
-		if (isset($data->access_token)) {
+		if (isset($data->access_token) && is_string($data->access_token)) {
 			update_option('helloasso_access_token', $data->access_token);
-			update_option('helloasso_refresh_token', $data->refresh_token);
-			update_option('helloasso_token_expires_in', time() + $data->expires_in);
+			if (isset($data->refresh_token) && is_string($data->refresh_token)) {
+				update_option('helloasso_refresh_token', $data->refresh_token);
+			}
+			if (isset($data->expires_in) && is_numeric($data->expires_in)) {
+				update_option('helloasso_token_expires_in', time() + (int) $data->expires_in);
+			}
 			update_option('helloasso_refresh_token_expires_in', time() + HELLOASSO_REFRESH_TOKEN_LIFETIME);
 
 			helloasso_log_info('Token OAuth2 rafraîchi avec succès', array(
 				'new_token_preview' => substr($data->access_token, 0, 10) . '...',
-				'expires_in' => $data->expires_in
+				'expires_in' => isset($data->expires_in) && is_numeric($data->expires_in) ? (int) $data->expires_in : null
 			));
 
 			return $data->access_token;
@@ -103,6 +112,8 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 
 		$response_body = wp_remote_retrieve_body($response);
 		$response_code = wp_remote_retrieve_response_code($response);
+
+		/** @var object{access_token?: string, refresh_token?: string, expires_in?: int|string} $data */
 		$data = json_decode($response_body);
 
 		helloasso_log_info('Réponse demande token OAuth2', array(
@@ -110,15 +121,19 @@ function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 			'has_access_token' => isset($data->access_token)
 		));
 
-		if (isset($data->access_token)) {
+		if (isset($data->access_token) && is_string($data->access_token)) {
 			add_option('helloasso_access_token', $data->access_token);
-			add_option('helloasso_refresh_token', $data->refresh_token);
-			add_option('helloasso_token_expires_in', time() + $data->expires_in);
+			if (isset($data->refresh_token) && is_string($data->refresh_token)) {
+				add_option('helloasso_refresh_token', $data->refresh_token);
+			}
+			if (isset($data->expires_in) && is_numeric($data->expires_in)) {
+				add_option('helloasso_token_expires_in', time() + (int) $data->expires_in);
+			}
 			add_option('helloasso_refresh_token_expires_in', time() + HELLOASSO_REFRESH_TOKEN_LIFETIME);
 
 			helloasso_log_info('Nouveau token OAuth2 obtenu avec succès', array(
 				'token_preview' => substr($data->access_token, 0, 10) . '...',
-				'expires_in' => $data->expires_in
+				'expires_in' => isset($data->expires_in) && is_numeric($data->expires_in) ? (int) $data->expires_in : null
 			));
 
 			return $data->access_token;

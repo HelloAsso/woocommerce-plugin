@@ -83,8 +83,10 @@ function helloasso_endpoint()
 
 	$response_body = wp_remote_retrieve_body($response);
 	$data = json_decode($response_body);
-
-	if (isset($data->access_token)) {
+	if (!is_object($data)) {
+		return null;
+	}
+	if (isset($data->access_token) && is_string($data->access_token)) {
 		helloasso_log_info('Token OAuth2 reçu avec succès', array(
 			'organization_slug' => $data->organization_slug ?? 'unknown',
 			'expires_in' => $data->expires_in ?? 'unknown'
@@ -121,7 +123,10 @@ function helloasso_endpoint()
 				'response_body' => wp_remote_retrieve_body($responseNotif)
 			));
 
-			$gateway_settings = get_option('woocommerce_helloasso_settings', array());
+			$gateway_settings = is_array(get_option('woocommerce_helloasso_settings', array()))
+				? get_option('woocommerce_helloasso_settings', array())
+				: array();
+
 			$gateway_settings['enabled'] = 'no';
 			update_option('woocommerce_helloasso_settings', $gateway_settings);
 
@@ -156,6 +161,11 @@ add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
 function helloasso_endpoint_deco()
 {
 	$gateway_settings = get_option('woocommerce_helloasso_settings', array());
+
+	if (!is_array($gateway_settings)) {
+		$gateway_settings = array();
+	}
+
 	$gateway_settings['enabled'] = 'no';
 	$gateway_settings['multi_3_enabled'] = 'no';
 	$gateway_settings['multi_12_enabled'] = 'no';
@@ -186,30 +196,59 @@ function helloasso_endpoint_webhook()
 	$raw_input = file_get_contents('php://input');
 	$data = json_decode($raw_input, true);
 
+	if (!is_array($data)) {
+		helloasso_log_error('Payload webhook invalide', array(
+			'raw_data_length' => strlen($raw_input),
+		));
+		exit;
+	}
+
+	/** @var array{
+	 *   eventType?: string,
+	 *   metadata?: array{reference?: string},
+	 *   data?: array{checkoutIntentId?: string, new_slug_organization?: string}
+	 * } $data
+	 */
+
 	helloasso_log_info('Webhook HelloAsso reçu', array(
-		'event_type' => $data['eventType'] ?? 'unknown',
+		'event_type' => isset($data['eventType']) && is_string($data['eventType']) ? $data['eventType'] : 'unknown',
 		'raw_data_length' => strlen($raw_input)
 	));
 
 	add_option('helloasso_webhook_data', wp_json_encode($data));
 
-	if ('Order' === $data['eventType']) {
+	if (($data['eventType'] ?? null) === 'Order') {
+		$metadata = isset($data['metadata']) && is_array($data['metadata']) ? $data['metadata'] : array();
+		$payload = isset($data['data']) && is_array($data['data']) ? $data['data'] : array();
+
+		$reference = isset($metadata['reference']) && is_string($metadata['reference']) ? $metadata['reference'] : 'unknown';
+		$checkoutIntentId = isset($payload['checkoutIntentId']) && is_string($payload['checkoutIntentId']) ? $payload['checkoutIntentId'] : 'unknown';
+
 		helloasso_log_info('Traitement d\'un événement Order', array(
-			'order_reference' => $data['metadata']['reference'] ?? 'unknown',
-			'checkout_intent_id' => $data['data']['checkoutIntentId'] ?? 'unknown'
+			'order_reference' => $reference,
+			'checkout_intent_id' => $checkoutIntentId
 		));
-		validate_order($data['metadata']['reference'], $data['data']['checkoutIntentId']);
-	} else if ('Organization' === $data['eventType']) {
+
+		if ($reference !== 'unknown' && $checkoutIntentId !== 'unknown') {
+			validate_order($reference, $checkoutIntentId);
+		}
+	} elseif (($data['eventType'] ?? null) === 'Organization') {
+		$payload = isset($data['data']) && is_array($data['data']) ? $data['data'] : array();
+		$newSlug = isset($payload['new_slug_organization']) && is_string($payload['new_slug_organization']) ? $payload['new_slug_organization'] : 'unknown';
+
 		helloasso_log_info('Traitement d\'un événement Organization', array(
-			'new_slug' => $data['data']['new_slug_organization'] ?? 'unknown'
+			'new_slug' => $newSlug
 		));
+
 		delete_option('helloasso_organization_slug');
-		add_option('helloasso_organization_slug', $data['data']['new_slug_organization']);
+		if ($newSlug !== 'unknown') {
+			add_option('helloasso_organization_slug', $newSlug);
+		}
 
 		helloasso_refresh_token_asso();
 	} else {
 		helloasso_log_warning('Événement webhook non reconnu', array(
-			'event_type' => $data['eventType'] ?? 'unknown'
+			'event_type' => isset($data['eventType']) && is_string($data['eventType']) ? $data['eventType'] : 'unknown'
 		));
 	}
 
@@ -272,8 +311,10 @@ function validate_order($orderId, $checkoutIntentId)
 		'has_token' => !empty($helloasso_access_token_asso)
 	));
 
-	$url = $api_url . 'v5/organizations/' . $slug . '/checkout-intents/' . $checkoutIntentId;
-	$response = wp_remote_request($url, helloasso_get_args_get_token($helloasso_access_token_asso));
+	$slug = is_string($slug) ? $slug : '';
+	$checkoutIntentId = is_string($checkoutIntentId) ? $checkoutIntentId : '';
+
+	$url = $api_url . 'v5/organizations/' . $slug . '/checkout-intents/' . $checkoutIntentId;	$response = wp_remote_request($url, helloasso_get_args_get_token($helloasso_access_token_asso));
 
 	$response_code = wp_remote_retrieve_response_code($response);
 	$body = wp_remote_retrieve_body($response);
@@ -295,7 +336,14 @@ function validate_order($orderId, $checkoutIntentId)
 
 	$haOrder = json_decode($body);
 
-	if (!$haOrder || !isset($haOrder->order) || !isset($haOrder->order->payments) || empty($haOrder->order->payments)) {
+	if (!is_object($haOrder) || !isset($haOrder->order) || !is_object($haOrder->order)) {
+		helloasso_log_error('Réponse JSON invalide', array(
+			'order_id' => $orderId,
+			'response_body' => $body,
+		));
+		return $order;
+	}
+	if ( !isset($haOrder->order) || !isset($haOrder->order->payments) || empty($haOrder->order->payments)) {
 		helloasso_log_error('Structure de réponse HelloAsso invalide', array(
 			'order_id' => $orderId,
 			'response_body' => $body

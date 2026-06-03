@@ -10,6 +10,41 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	 */
 	public $isConnected;
 
+	/** 
+	 * @var string
+	 */
+	public $icon = '';
+	/** 
+	 * @var string
+	 */
+	public $title = '';
+	/** 
+	 * @var string
+	 */
+	public $description = '';
+
+	/** 
+	 * @var string
+	 */
+	public $method_description = '';
+
+	/** 
+	 * @var string
+	 */
+	public $enabled = '';
+
+	/** 
+	 * @var bool
+	 */
+	public $has_fields = false;
+
+	/** @var string[] */
+	public $supports = [];
+
+  	/** @var array<string, mixed> */
+
+	public $form_fields = [];
+
 
 	public function __construct()
 	{		
@@ -20,7 +55,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		));
 
 		$this->id = 'helloasso';
-		$this->icon = null;
+		$this->icon = '';
 		$this->has_fields = true;
 		$this->method_title = 'Payer par carte bancaire avec HelloAsso';
 		$this->method_description = 'Acceptez des paiements gratuitement avec HelloAsso (0 frais, 0 commission pour votre association).';
@@ -35,7 +70,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		$this->title = $this->get_option('title');
 		$this->description = 'Le modèle solidaire de HelloAsso garantit que 100% de votre paiement sera versé à l’association choisie. Vous pouvez soutenir l’aide qu’ils apportent aux associations en laissant une contribution volontaire à HelloAsso au moment de votre paiement.';
 		$this->enabled = $this->get_option('enabled');
-		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'save_admin_options'));
 	}
 
 	public function payment_fields()
@@ -80,6 +115,10 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		}
 	}
 
+	public function save_admin_options(): void
+	{
+		$this->process_admin_options();
+	}
 	public function admin_options()
 	{
 		// Check if we have helloasso_access_token_asso in the options
@@ -92,7 +131,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			if (isset($_GET['msg'])) {
 				$msg = sanitize_text_field($_GET['msg']);
 
-				if (isset($msg) && 'error_connect' === $msg) {
+				if ( 'error_connect' === $msg) {
 					if (isset($_GET['status_code']) && '403' === $_GET['status_code']) {
 						echo '<div class="notice notice-error is-dismissible">
 							<p>Erreur lors de la connexion à HelloAsso. Veuillez <a href="https://www.helloasso.com/contactez-nous" target="_blank">nous contacter</a>. (Erreur 403)</p>
@@ -104,7 +143,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 					}
 				}
 
-				if (isset($msg) && 'success_connect' === $msg && $this->isConnected) {
+				if ( 'success_connect' === $msg && $this->isConnected) {
 					
 					echo '<div class="notice notice-success is-dismissible">
 					<p>Connexion à HelloAsso réussie.</p>
@@ -256,8 +295,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				$("#woocommerce_helloasso_enabled, #woocommerce_helloasso_testmode").change(function() {
 					var enabled = $("#woocommerce_helloasso_enabled").is(":checked") ? 1 : 0;
 					var testmode = $("#woocommerce_helloasso_testmode").is(":checked") ? 1 : 0;
-					var wasEnabled = ' . esc_js($enabled) . ';
-					var wasTestMode = ' . esc_js($testmode) . ';
+					var wasEnabled = ' . wp_json_encode((string) $enabled) . ';
+					var wasTestMode = ' . wp_json_encode((string) $testmode) . ';
 					var buttonText = "Enregistrer les modifications";
 
 					if (enabled == 1 && wasEnabled == 0) {
@@ -383,7 +422,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		// }
 
 		if (	$this->isConnected && get_option('helloasso_testmode') == $this->get_option('testmode')) {
-			return;
+		return true;
 		}
 
 		delete_option('helloasso_access_token');
@@ -407,7 +446,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		}
 
 		if ($this->get_option('enabled') !== 'yes') {
-			return;
+			return true;
 		}
 
 		helloasso_get_oauth_token($client_id, $client_secret, $api_url);
@@ -433,7 +472,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		exit;
 	}
 
-	public function validate_fields()
+	public function validate_fields(): bool
 	{
 		if (isset($_GET['pay_for_order'])) {
 			return true;
@@ -452,10 +491,23 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			$json = file_get_contents('php://input');
 			$data = json_decode($json, true);
 
+			if (!is_array($data)) {
+				wc_add_notice('Données de commande invalides', 'error');
+				return false;
+			}
 
-			$firstName = $data['billing_address']['first_name'];
-			$lastName = $data['billing_address']['last_name'];
-			$email = $data['billing_address']['email'];
+			if (
+				!isset($data['billing_address']) ||
+				!is_array($data['billing_address']) ||
+				!isset($data['billing_address']['first_name'], $data['billing_address']['last_name'], $data['billing_address']['email'])
+			) {
+				wc_add_notice('Données de facturation incomplètes', 'error');
+				return false;
+			}
+
+			$firstName = is_string($data['billing_address']['first_name']) ? $data['billing_address']['first_name'] : '';
+			$lastName  = is_string($data['billing_address']['last_name']) ? $data['billing_address']['last_name'] : '';
+			$email     = is_string($data['billing_address']['email']) ? $data['billing_address']['email'] : '';
 		}
 
 		if (preg_match('/(.)\1{2,}/', $firstName)) {
@@ -624,14 +676,24 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				$json = file_get_contents('php://input');
 				$data = json_decode($json, true);
 
-				$firstName = $data['billing_address']['first_name'];
-				$lastName = $data['billing_address']['last_name'];
-				$email = $data['billing_address']['email'];
-				$adress = $data['billing_address']['address_1'];
-				$city = $data['billing_address']['city'];
-				$zipCode = $data['billing_address']['postcode'];
-				$countryIso = helloasso_convert_country_code($data['billing_address']['country']);
-				$company = $data['billing_address']['company'];
+				if (!is_array($data) || !isset($data['billing_address']) || !is_array($data['billing_address'])) {
+					wc_add_notice('Données de commande invalides', 'error');
+					return array(
+						'result' => 'failure',
+						'messages' => 'Données de commande invalides',
+					);		
+					}
+
+				$billingAddress = $data['billing_address'];
+
+				$firstName = isset($billingAddress['first_name']) && is_string($billingAddress['first_name']) ? $billingAddress['first_name'] : '';
+				$lastName = isset($billingAddress['last_name']) && is_string($billingAddress['last_name']) ? $billingAddress['last_name'] : '';
+				$email = isset($billingAddress['email']) && is_string($billingAddress['email']) ? $billingAddress['email'] : '';
+				$adress = isset($billingAddress['address_1']) && is_string($billingAddress['address_1']) ? $billingAddress['address_1'] : '';
+				$city = isset($billingAddress['city']) && is_string($billingAddress['city']) ? $billingAddress['city'] : '';
+				$zipCode = isset($billingAddress['postcode']) && is_string($billingAddress['postcode']) ? $billingAddress['postcode'] : '';
+				$countryIso = isset($billingAddress['country']) && is_string($billingAddress['country']) ? helloasso_convert_country_code($billingAddress['country']) : '';
+				$company = isset($billingAddress['company']) && is_string($billingAddress['company']) ? $billingAddress['company'] : '';
 
 				helloasso_log_debug('Données client récupérées depuis JSON', array(
 					'first_name' => $firstName,
@@ -699,13 +761,15 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		$payment_type = 'one_time';
 		if ($this->get_option('multi_3_enabled') === 'yes' || $this->get_option('multi_12_enabled') === 'yes') {
 
-			if (isset($_POST['payment_data']) && isset($_POST['payment_data']['payment_type'])) {
+			$payment_type = 'one_time';
+
+			if (isset($_POST['payment_data']) && is_array($_POST['payment_data']) && isset($_POST['payment_data']['payment_type']) && is_string($_POST['payment_data']['payment_type'])) {
 				$payment_type = sanitize_text_field($_POST['payment_data']['payment_type']);
-			} elseif (isset($_POST['payment_type'])) {
+			} elseif (isset($_POST['payment_type']) && is_string($_POST['payment_type'])) {
 				$payment_type = sanitize_text_field($_POST['payment_type']);
-			} elseif (isset($_POST['helloasso_payment_type'])) {
+			} elseif (isset($_POST['helloasso_payment_type']) && is_string($_POST['helloasso_payment_type'])) {
 				$payment_type = sanitize_text_field($_POST['helloasso_payment_type']);
-			} elseif (isset($_POST['paymentMethodData']) && isset($_POST['paymentMethodData']['payment_type'])) {
+			} elseif (isset($_POST['paymentMethodData']) && is_array($_POST['paymentMethodData']) && isset($_POST['paymentMethodData']['payment_type']) && is_string($_POST['paymentMethodData']['payment_type'])) {
 				$payment_type = sanitize_text_field($_POST['paymentMethodData']['payment_type']);
 			}
 
@@ -713,12 +777,12 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				$input = file_get_contents('php://input');
 				$request = json_decode($input, true);
 
-				if ($request) {
-					if (isset($request['payment_data']) && isset($request['payment_data']['payment_type'])) {
+				if (is_array($request)) {
+					if (isset($request['payment_data']) && is_array($request['payment_data']) && isset($request['payment_data']['payment_type']) && is_string($request['payment_data']['payment_type'])) {
 						$payment_type = sanitize_text_field($request['payment_data']['payment_type']);
-					} elseif (isset($request['paymentMethodData']) && isset($request['paymentMethodData']['payment_type'])) {
+					} elseif (isset($request['paymentMethodData']) && is_array($request['paymentMethodData']) && isset($request['paymentMethodData']['payment_type']) && is_string($request['paymentMethodData']['payment_type'])) {
 						$payment_type = sanitize_text_field($request['paymentMethodData']['payment_type']);
-					} elseif (isset($request['meta']) && isset($request['meta']['paymentMethodData']) && isset($request['meta']['paymentMethodData']['payment_type'])) {
+					} elseif (isset($request['meta']) && is_array($request['meta']) && isset($request['meta']['paymentMethodData']) && is_array($request['meta']['paymentMethodData']) && isset($request['meta']['paymentMethodData']['payment_type']) && is_string($request['meta']['paymentMethodData']['payment_type'])) {
 						$payment_type = sanitize_text_field($request['meta']['paymentMethodData']['payment_type']);
 					} else {
 						$payment_type = helloasso_find_payment_type_recursive($request);
@@ -818,8 +882,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		} else {
 			$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
 		}
-
-		$url = $api_url . 'v5/organizations/' . get_option('helloasso_organization_slug') . '/checkout-intents';
+		$helloasso_organization_slug = get_option('helloasso_organization_slug');
+		$helloasso_organization_slug = is_string($helloasso_organization_slug) ? $helloasso_organization_slug : '';
+		$url = $api_url . 'v5/organizations/' . $helloasso_organization_slug . '/checkout-intents';
 
 		helloasso_log_info('Appel API HelloAsso', array(
 			'order_id' => $order_id,
@@ -857,25 +922,29 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 
 		$response_data = json_decode($response_body);
 
-		if (!$response_data || !isset($response_data->redirectUrl)) {
+		if (!is_object($response_data) || !isset($response_data->redirectUrl) || !is_string($response_data->redirectUrl)) {
 			helloasso_log_error('Réponse API invalide', array(
 				'order_id' => $order_id,
 				'response_body' => $response_body,
 				'response_code' => $response_code
 			));
+
+			return array(
+				'result' => 'failure',
+				'messages' => 'Réponse API invalide',
+			);
 		}
 
 		helloasso_log_info('Paiement traité avec succès', array(
 			'order_id' => $order_id,
-			'redirect_url' => $response_data->redirectUrl ?? 'unknown'
+			'redirect_url' => $response_data->redirectUrl
 		));
 
-		
-			$order->save();
+		$order->save();
 
 		return array(
 			'result' => 'success',
-			'redirect' => json_decode($response_body)->redirectUrl
+			'redirect' => $response_data->redirectUrl,
 		);
 	}
 }

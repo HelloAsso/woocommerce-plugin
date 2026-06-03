@@ -1,4 +1,10 @@
 *** HelloAsso Payments for WooCommerce Changelog ***
 
+2026-06-03 - version 1.1.2
+* Update logout message on admin panel
+* Add phpstan to ensuire compatibility with wordpress and woocommerce
+
+2026-04-23 - version 1.1.1
+* Rework api calls
 2024-02-28 - version 1.0.0
 * Initial release

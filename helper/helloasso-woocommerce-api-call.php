@@ -2,8 +2,18 @@
 if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
+
+function helloasso_get_user_agent(): string
+{
+    $woocommerce_db_version = get_option('woocommerce_db_version');
+    $woocommerce_db_version = is_string($woocommerce_db_version) ? $woocommerce_db_version : '';
+
+    return 'PHP ' . PHP_VERSION . '/WooCommerce ' . $woocommerce_db_version;
+}
+
 function helloasso_get_args_post_urlencode($data)
 {
+
 	helloasso_log_debug('Préparation requête POST URL-encoded', array(
 		'data_keys' => array_keys($data),
 		'data_count' => count($data)
@@ -20,7 +30,7 @@ function helloasso_get_args_post_urlencode($data)
 		),
 		'body' => http_build_query($data),
 		'cookies' => array(),
-		'user-agent' => 'PHP ' . PHP_VERSION . '/WooCommerce ' . get_option('woocommerce_db_version'),
+		'user-agent' => helloasso_get_user_agent()
 	);
 
 	return $args;
@@ -44,7 +54,7 @@ function helloasso_get_args_post($data)
 		),
 		'body' => $data,
 		'cookies' => array(),
-		'user-agent' => 'PHP ' . PHP_VERSION . '/WooCommerce ' . get_option('woocommerce_db_version'),
+		'user-agent' => helloasso_get_user_agent(),
 	);
 
 	return $args;
@@ -71,7 +81,7 @@ function helloasso_get_args_post_token($data, $token)
 		),
 		'body' => wp_json_encode($data),
 		'cookies' => array(),
-		'user-agent' => 'PHP ' . PHP_VERSION . '/WooCommerce ' . get_option('woocommerce_db_version'),
+		'user-agent' => helloasso_get_user_agent(),
 	);
 
 	return $args;
@@ -97,7 +107,7 @@ function helloasso_get_args_put_token($data, $token)
 		),
 		'body' => wp_json_encode($data),
 		'cookies' => array(),
-		'user-agent' => 'PHP ' . PHP_VERSION . '/WooCommerce ' . get_option('woocommerce_db_version'),
+		'user-agent' => helloasso_get_user_agent(),
 	);
 
 	return $args;
@@ -120,7 +130,7 @@ function helloasso_get_args_get_token($token)
 			'Authorization' => 'Bearer ' . $token,
 		),
 		'cookies' => array(),
-		'user-agent' => 'PHP ' . PHP_VERSION . '/WooCommerce ' . get_option('woocommerce_db_version'),
+		'user-agent' => helloasso_get_user_agent(),
 	);
 
 	return $args;
