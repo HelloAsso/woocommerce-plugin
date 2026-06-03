@@ -5,11 +5,16 @@ parameters:
     level: 5
     scanFiles:
         - stubs/woocommerce.php
+        - stubs/woocommerce-payment-gateways.php
+        - stubs/woocommerce-blocks.php
+        - stubs/woocommerce-blocks-integrations.php
     paths:
         - inc
         - wc-api
         - helper
+        - block
         - cron
+        - helloasso-woocommerce-gateway.php
 
     excludePaths:
         analyse:

@@ -111,10 +111,15 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 					</div>';
 				}
 				if(!$this->isConnected) {
-					echo '<div class="notice notice-error is-dismissible">
-					<p>La connexion à HelloAsso est incomplète. Veuillez réessayer.</p>
-					</div>';
-
+					if(isset($_GET['deconnect']) && 'success' === $_GET['deconnect']) {
+						echo '<div class="notice notice-success is-dismissible">
+						<p>Déconnexion de HelloAsso réussie.</p>
+						</div>';
+					} else {
+						echo '<div class="notice notice-error is-dismissible">
+						<p>La connexion à HelloAsso est incomplète. Veuillez réessayer.</p>
+						</div>';
+					}
 				}
 		
 			}
@@ -295,7 +300,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 						console.log(data);
 						var data = JSON.parse(data);
 						if (data.success) {
-							location.reload();
+						const url = new URL(window.location.href);
+						url.searchParams.set("deconnect", "success");
+						window.location.replace(url.toString());
 						} else {
 							alert(data.message);
 						}

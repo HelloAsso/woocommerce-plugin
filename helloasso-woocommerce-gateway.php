@@ -28,6 +28,7 @@ define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 second
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Helloasso\HelloassoPaymentsForWoocommerce\Gateway\WC_HelloAsso_Gateway;
+use Helloasso\HelloassoPaymentsForWoocommerce\Block\Helloasso_Blocks;
 
 require_once('helper/helloasso-woocommerce-api-call.php');
 require_once('helper/helloasso-woocommerce-config.php');
@@ -125,5 +126,4 @@ function helloasso_deactivate()
 	delete_option('helloasso_webhook_data');
 }
 
-add_action('wp_ajax_helloasso_deco', 'helloasso_deco');
 

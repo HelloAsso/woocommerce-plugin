@@ -1,4 +1,6 @@
 <?php
+namespace Helloasso\HelloassoPaymentsForWoocommerce\Block;
+
 if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
@@ -7,13 +9,13 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
 final class Helloasso_Blocks extends AbstractPaymentMethodType
 {
 	private $gateway;
-	protected $name = 'helloasso';
+	protected  $name = 'helloasso';
 
 	public function initialize()
 	{
 		$this->settings = get_option('woocommerce_helloasso_settings', []);
 	
-		$this->gateway =WC_Payment_Gateways::instance()->payment_gateways()[$this->name];
+		$this->gateway = \WC_Payment_Gateways::instance()->payment_gateways()[$this->name];
 		
 	}
 

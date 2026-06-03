@@ -29,6 +29,9 @@ if (!class_exists('WC_Payment_Gateway')) {
         {
         }
 
+        /**
+         * @return mixed
+         */
         public function get_option($key, $empty_value = null)
         {
             return $empty_value;
@@ -38,5 +41,12 @@ if (!class_exists('WC_Payment_Gateway')) {
         {
             return true;
         }
+    }
+}
+
+if (!function_exists('get_woocommerce_currency')) {
+    function get_woocommerce_currency(): string
+    {
+        return 'EUR';
     }
 }
