@@ -1,0 +1,30 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    scanFiles:
+        - stubs/woocommerce.php
+    paths:
+        - inc
+        - wc-api
+        - helper
+        - cron
+
+    excludePaths:
+        analyse:
+            - vendor
+
+
+
+    checkFunctionNameCase: true
+    checkExplicitMixed: true
+    tmpDir: var/phpstan
+
+    universalObjectCratesClasses:
+        - WP_Post
+        - WP_User
+        - WC_Product
+        - WC_Order
+        - WC_Customer
+        - WC_Cart
