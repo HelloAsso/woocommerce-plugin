@@ -50,7 +50,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	{		
 
 		helloasso_log_info('Initialisation du gateway HelloAsso', array(
-			'plugin_version' => '1.1.2',
+			'plugin_version' => '1.1.3',
 			'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
 		));
 

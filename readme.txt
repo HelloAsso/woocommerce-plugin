@@ -3,9 +3,9 @@ Contributors: helloasso
 Donate link: https://helloasso.com
 Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.2.34
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -95,6 +95,14 @@ Please report security bugs found in the source code of the helloasso plugin thr
 [youtube https://www.youtube.com/watch?v=yrv1_PIakac]
 
 == Changelog ==
+
+= 1.1.3 =
+
+* Update logout message on admin panel
+* Add phpstan to ensuire compatibility with wordpress and woocommerce
+* PHP coverage until 8.5
+* ensure compatibility with woocommerce 10.8.1
+* ensure compatibility with wordpress 7.0
 
 = 1.1.2 =
 
