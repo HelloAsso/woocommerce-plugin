@@ -3,8 +3,7 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
-// Durée de validité du refresh token : 30 jours en secondes
-define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+
 
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 function helloasso_endpoint()
