@@ -1,7 +1,5 @@
 <?php
 
-// Durée de validité du refresh token : 30 jours en secondes
-define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
 
 function hello_asso_cron_refresh_token()
 {

@@ -1,6 +1,9 @@
 .idea
 .vscode
 .DS_Store
-/vendor/
+/vendor/*
+!/vendor/composer
+!/vendor/autoload.php
+
 /var
 /composer.lock
