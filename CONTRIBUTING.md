@@ -14,10 +14,12 @@ We use github to host code, to track issues and feature requests, as well as acc
 Pull requests are the best way to propose changes to the codebase. We actively welcome your pull requests:
 
 1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. Ensure the test suite passes.
-4. Make sure your code lints.
-5. Issue that pull request!
+2. Install composer dependancies
+3. If you've added code that should be tested, add tests.
+4. Run ./vendor/bin/phpstan and correct if necessary
+5. Ensure the test suite passes.
+6. Make sure your code lints.
+7. Issue that pull request!
 
 ## Any contributions you make will be under the GPLv3 Software License
 In short, when you submit code changes, your submissions are understood to be under the same [GPLv3](LICENSE) that covers the project.
