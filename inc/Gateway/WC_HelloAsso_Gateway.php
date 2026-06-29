@@ -76,8 +76,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	public function payment_fields()
 	{
 		if ($this->description) {
+			
 			echo '<div style="display: flex; align-items: center;">';
-			echo '<img style="max-width: 50px; height:auto; margin-right: 16px;" src="/wp-content/plugins/helloasso-payments-for-woocommerce/assets/logo-ha.png" alt="HelloAsso Logo" />';
+			echo '<img style="max-width: 50px; height:auto; margin-right: 16px;" src="' . esc_url(HELLOASSO_PLUGIN_DIR . 'assets/logo-ha.png') . '" alt="HelloAsso Logo" />';
 			echo '<p>' . wp_kses_post($this->description) . '</p>';
 			echo '</div>';
 		}

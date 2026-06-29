@@ -26,6 +26,7 @@ if (!defined('ABSPATH')) {
 require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 // Durée de validité du refresh token : 30 jours en secondes
 define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+define('HELLOASSO_PLUGIN_DIR', plugin_dir_url( __FILE__));
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Helloasso\HelloassoPaymentsForWoocommerce\Gateway\WC_HelloAsso_Gateway;
