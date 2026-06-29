@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 
 define('HELLOASSO_PLUGIN_DIR', '/tmp/helloasso-plugin/');
-
+define('HELLOASSO_PLUGIN_VERSION', '1.1.3');
 if (!function_exists('get_woocommerce_currency')) {
     function get_woocommerce_currency(): string
     {

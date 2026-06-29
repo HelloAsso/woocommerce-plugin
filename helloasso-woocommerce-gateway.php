@@ -26,6 +26,7 @@ if (!defined('ABSPATH')) {
 require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 // Durée de validité du refresh token : 30 jours en secondes
 define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+define('HELLOASSO_PLUGIN_VERSION', '1.1.3');
 define('HELLOASSO_PLUGIN_DIR', plugin_dir_url( __FILE__));
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
@@ -104,6 +105,10 @@ function helloasso_activate()
 		deactivate_plugins(plugin_basename(__FILE__));
 		wp_die('HelloAsso ne prend en charge que les paiements en euros. Veuillez changer la devise de votre boutique en euros pour activer ce plugin.');
 	}
+	helloasso_log_info('Initialisation du gateway HelloAsso', array(
+		'plugin_version' => HELLOASSO_PLUGIN_VERSION,
+		'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
+	));
 }
 
 
