@@ -491,12 +491,12 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			return false;
 		}
 
-		if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $firstName)) {
+		if (preg_match('/[^a-zA-ZéèêëáàâäúùûüçÇ\' -]/', $firstName)) {
 			wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 			return false;
 		}
 
-		if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $lastName)) {
+		if (preg_match('/[^a-zA-ZéèêëáàâäúùûüçÇ\' -]/', $lastName)) {
 			wc_add_notice('Le nom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 			return false;
 		}
@@ -522,7 +522,12 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'payment_method' => 'helloasso'
 		));
 
-		helloasso_refresh_token_asso();
+		$tokenExpires = get_option('helloasso_token_expires_in_asso');
+		$accessToken  = get_option('helloasso_access_token_asso');
+		if (!$accessToken || !$tokenExpires || time() >= (int) $tokenExpires) {
+			helloasso_refresh_token_asso();
+		}
+
 		$order = wc_get_order($order_id);
 
 		if (!$order) {
@@ -828,7 +833,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				'error' => $response->get_error_message(),
 				'error_code' => $response->get_error_code()
 			));
-			echo 'Erreur : ' . esc_html($response->get_error_message());
+			wc_add_notice('Une erreur est survenue lors de la connexion à HelloAsso. Veuillez réessayer.', 'error');
+			return array('result' => 'failure');
 		}
 
 		$response_body = wp_remote_retrieve_body($response);
@@ -846,6 +852,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				'response_code' => $response_code,
 				'response_body' => $response_body
 			));
+			wc_add_notice('Une erreur est survenue lors de la création du paiement HelloAsso (code ' . $response_code . '). Veuillez réessayer.', 'error');
+			return array('result' => 'failure');
 		}
 
 		$response_data = json_decode($response_body);
@@ -856,6 +864,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				'response_body' => $response_body,
 				'response_code' => $response_code
 			));
+			wc_add_notice('Réponse inattendue de HelloAsso. Veuillez réessayer.', 'error');
+			return array('result' => 'failure');
 		}
 
 		helloasso_log_info('Paiement traité avec succès', array(
