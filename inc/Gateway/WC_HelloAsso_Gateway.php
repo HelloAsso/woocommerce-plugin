@@ -573,17 +573,22 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 
 	public function process_payment($order_id)
 	{
+		$order_id = (int) $order_id;
+
 		helloasso_log_info('Début du traitement de paiement', array(
 			'order_id' => $order_id,
 			'user_id' => get_current_user_id(),
 			'payment_method' => 'helloasso'
 		));
 
-		$tokenExpires = get_option('helloasso_token_expires_in_asso');
+		$tokenExpiresRaw = get_option('helloasso_token_expires_in_asso');
 		$accessToken  = get_option('helloasso_access_token_asso');
+		$tokenExpires = is_numeric($tokenExpiresRaw) ? (int) $tokenExpiresRaw : 0;
+
 		if (!$accessToken || !$tokenExpires || time() >= (int) $tokenExpires) {
 			helloasso_refresh_token_asso();
-		}
+		}	
+
 
 		$order = wc_get_order($order_id);
 
@@ -591,7 +596,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			helloasso_log_error('Commande introuvable', array('order_id' => $order_id));
 			return array('result' => 'failure', 'messages' => 'Commande introuvable');
 		}
-
+		
 		helloasso_log_info('Récupération des données client', array(
 			'order_id' => $order_id,
 			'order_status' => $order->get_status(),
