@@ -14,7 +14,8 @@ function helloasso_log($message, $level = 'info', $context = array())
 	$context['timestamp'] = current_time('Y-m-d H:i:s');
 	$context['memory_usage'] = memory_get_usage(true);
 	$context['peak_memory'] = memory_get_peak_usage(true);
-
+	$context['plugin_version'] = HELLOASSO_PLUGIN_VERSION;
+	$context['wc_version'] = defined('WC_VERSION') ? WC_VERSION : 'unknown';
 	$log_message = sprintf(
 		'[%s] %s - %s',
 		strtoupper($level),

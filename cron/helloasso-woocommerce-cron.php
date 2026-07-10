@@ -1,7 +1,5 @@
 <?php
 
-// Durée de validité du refresh token : 30 jours en secondes
-define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
 
 function hello_asso_cron_refresh_token()
 {
@@ -45,9 +43,9 @@ function helloasso_refresh_token_asso()
 		}
 
 		$response_body = wp_remote_retrieve_body($response);
-		$data = json_decode($response_body);
+		$data = json_decode($response_body, false);
 
-		if (isset($data->access_token)) {
+		if (is_object($data) && isset($data->access_token)) {
 			update_option('helloasso_access_token_asso', $data->access_token);
 			update_option('helloasso_refresh_token_asso', $data->refresh_token);
 			update_option('helloasso_token_expires_in_asso', time() + $data->expires_in);

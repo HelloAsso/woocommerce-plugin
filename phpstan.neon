@@ -1,0 +1,38 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    scanFiles:
+        - stubs/woocommerce.php
+        - stubs/woocommerce-payment-gateway.php
+        - stubs/woocommerce-payment-gateways.php
+        - stubs/woocommerce-blocks.php
+        - stubs/woocommerce-blocks-integrations.php
+    paths:
+        - inc
+        - helloasso-api
+        - wc-api
+        - helper
+        - block
+        - cron
+        - helloasso-woocommerce-gateway.php
+
+    excludePaths:
+        analyse:
+            - vendor
+
+
+
+    checkFunctionNameCase: true
+    checkExplicitMixed: true
+    tmpDir: var/phpstan
+    treatPhpDocTypesAsCertain: false
+
+    universalObjectCratesClasses:
+        - WP_Post
+        - WP_User
+        - WC_Product
+        - WC_Order
+        - WC_Customer
+        - WC_Cart

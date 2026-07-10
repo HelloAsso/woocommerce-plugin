@@ -3,8 +3,9 @@
 /**
  * Plugin Name:       HelloAsso Payments for WooCommerce
  * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
- * Version:           1.1.2
- * Requires at least: 5.0
+ * Version:           1.1.3
+ * Requires at least: 6.0
+ * Tested up to:      7.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
  * Requires Plugins:  woocommerce
@@ -23,10 +24,14 @@ if (!defined('ABSPATH')) {
  * This action hook registers our PHP class as a WooCommerce payment gateway
  */
 require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
-
+// Durée de validité du refresh token : 30 jours en secondes
+define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+define('HELLOASSO_PLUGIN_VERSION', '1.1.3');
+define('HELLOASSO_PLUGIN_DIR', plugin_dir_url( __FILE__));
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Helloasso\HelloassoPaymentsForWoocommerce\Gateway\WC_HelloAsso_Gateway;
+use Helloasso\HelloassoPaymentsForWoocommerce\Block\Helloasso_Blocks;
 
 require_once('helper/helloasso-woocommerce-api-call.php');
 require_once('helper/helloasso-woocommerce-config.php');
@@ -100,6 +105,10 @@ function helloasso_activate()
 		deactivate_plugins(plugin_basename(__FILE__));
 		wp_die('HelloAsso ne prend en charge que les paiements en euros. Veuillez changer la devise de votre boutique en euros pour activer ce plugin.');
 	}
+	helloasso_log_info('Initialisation du gateway HelloAsso', array(
+		'plugin_version' => HELLOASSO_PLUGIN_VERSION,
+		'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
+	));
 }
 
 
@@ -124,5 +133,4 @@ function helloasso_deactivate()
 	delete_option('helloasso_webhook_data');
 }
 
-add_action('wp_ajax_helloasso_deco', 'helloasso_deco');
 

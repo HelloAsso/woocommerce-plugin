@@ -6,7 +6,15 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit8acb959cdef6e08c0a631c2e2581223e
 {
+    public static $files = array (
+        '9b38cf48e83f5d8f60375221cd213eee' => __DIR__ . '/..' . '/phpstan/phpstan/bootstrap.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'SzepeViktor\\PHPStan\\WordPress\\' => 30,
+        ),
         'H' => 
         array (
             'Helloasso\\HelloassoPaymentsForWoocommerce\\' => 42,
@@ -14,6 +22,10 @@ class ComposerStaticInit8acb959cdef6e08c0a631c2e2581223e
     );
 
     public static $prefixDirsPsr4 = array (
+        'SzepeViktor\\PHPStan\\WordPress\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/szepeviktor/phpstan-wordpress/src',
+        ),
         'Helloasso\\HelloassoPaymentsForWoocommerce\\' => 
         array (
             0 => __DIR__ . '/../..' . '/inc',

@@ -12,5 +12,8 @@
             "name": "helloasso"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "phpstan/phpstan": "^2.2",
+        "szepeviktor/phpstan-wordpress": "^2.0"
+    }
 }
