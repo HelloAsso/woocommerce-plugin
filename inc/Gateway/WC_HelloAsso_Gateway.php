@@ -481,27 +481,29 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			return false;
 		}
 
-		if (in_array($firstName, array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test'))) {
+		$forbiddenNames = array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test');
+
+		if (in_array(mb_strtolower(trim($firstName)), $forbiddenNames, true)) {
 			wc_add_notice('Le prénom ne peut pas être ' . $firstName, 'error');
 			return false;
 		}
 
-		if (in_array($lastName, array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test'))) {
+		if (in_array(mb_strtolower(trim($lastName)), $forbiddenNames, true)) {
 			wc_add_notice('Le nom ne peut pas être ' . $lastName, 'error');
 			return false;
 		}
 
-		if (preg_match('/[^a-zA-ZéèêëáàâäúùûüçÇ\' -]/', $firstName)) {
+		if (preg_match('/[^a-zA-ZÀ-ÿ\' -]/u', $firstName)) {
 			wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 			return false;
 		}
 
-		if (preg_match('/[^a-zA-ZéèêëáàâäúùûüçÇ\' -]/', $lastName)) {
+		if (preg_match('/[^a-zA-ZÀ-ÿ\' -]/u', $lastName)) {
 			wc_add_notice('Le nom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 			return false;
 		}
 
-		if ($firstName === $lastName) {
+		if (mb_strtolower(trim($firstName)) === mb_strtolower(trim($lastName))) {
 			wc_add_notice('Le prénom et le nom ne peuvent pas être identiques', 'error');
 			return false;
 		}
@@ -864,8 +866,13 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				'response_body' => $response_body,
 				'response_code' => $response_code
 			));
-			wc_add_notice('Réponse inattendue de HelloAsso. Veuillez réessayer.', 'error');
-			return array('result' => 'failure');
+			$message = 'Réponse inattendue de HelloAsso. Veuillez réessayer.';
+			if (isset($response_data->errors[0]->message)) {
+				$message = $response_data->errors[0]->message;
+			}
+
+			wc_add_notice($message, 'error');
+			return array('result' => 'failure', 'messages' => $message);
 		}
 
 		helloasso_log_info('Paiement traité avec succès', array(
