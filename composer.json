@@ -7,10 +7,22 @@
             "Helloasso\\HelloassoPaymentsForWoocommerce\\": "inc/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Helloasso\\HelloassoPaymentsForWoocommerce\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "helloasso"
         }
     ],
-    "require": {}
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "brain/monkey": "^2.6"
+    },
+    "scripts": {
+        "test": "phpunit --colors=always"
+    }
 }

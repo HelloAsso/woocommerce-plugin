@@ -3,8 +3,10 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
-// Durée de validité du refresh token : 30 jours en secondes
-define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+// Durée de validité du refresh token : 29 jours en secondes (durée réelle confirmée côté HelloAsso)
+if (!defined('HELLOASSO_REFRESH_TOKEN_LIFETIME')) {
+	define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 29 * 24 * 60 * 60); // 2505600 secondes
+}
 
 function helloasso_get_oauth_token($client_id, $client_secret, $api_url)
 {

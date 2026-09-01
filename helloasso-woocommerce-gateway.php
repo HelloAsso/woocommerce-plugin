@@ -28,6 +28,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Helloasso\HelloassoPaymentsForWoocommerce\Gateway\WC_HelloAsso_Gateway;
 
+require_once('helper/helloasso-woocommerce-validation.php');
 require_once('helper/helloasso-woocommerce-api-call.php');
 require_once('helper/helloasso-woocommerce-config.php');
 require_once('helper/helloasso-woocommerce-helper.php');
@@ -122,6 +123,8 @@ function helloasso_deactivate()
 	delete_option('helloasso_testmode');
 	delete_option('woocommerce_helloasso_settings');
 	delete_option('helloasso_webhook_data');
+	delete_option('helloasso_connection_lost_asso');
+	delete_option('helloasso_refresh_lock_asso');
 }
 
 add_action('wp_ajax_helloasso_deco', 'helloasso_deco');

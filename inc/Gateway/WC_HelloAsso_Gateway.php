@@ -451,60 +451,12 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			$email = $data['billing_address']['email'];
 		}
 
-		if (preg_match('/(.)\1{2,}/', $firstName)) {
-			wc_add_notice('Le prénom ne doit pas contenir 3 caractères répétitifs', 'error');
+		$namesError = helloasso_validate_billing_names($firstName, $lastName);
+		if ($namesError !== null) {
+			wc_add_notice($namesError, 'error');
 			return false;
 		}
 
-		if (preg_match('/(.)\1{2,}/', $lastName)) {
-			wc_add_notice('Le nom ne doit pas contenir 3 caractères répétitifs', 'error');
-			return false;
-		}
-
-		if (preg_match('/[0-9]/', $firstName)) {
-			wc_add_notice('Le prénom ne doit pas contenir de chiffre', 'error');
-			return false;
-		}
-
-		if (preg_match('/[0-9]/', $lastName)) {
-			wc_add_notice('Le nom ne doit pas contenir de chiffre', 'error');
-			return false;
-		}
-
-		if (preg_match('/[aeiouy]/i', $firstName) === 0) {
-			wc_add_notice('Le prénom doit contenir au moins une voyelle', 'error');
-			return false;
-		}
-
-		if (preg_match('/[aeiouy]/i', $lastName) === 0) {
-			wc_add_notice('Le nom doit contenir au moins une voyelle', 'error');
-			return false;
-		}
-
-		if (in_array($firstName, array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test'))) {
-			wc_add_notice('Le prénom ne peut pas être ' . $firstName, 'error');
-			return false;
-		}
-
-		if (in_array($lastName, array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test'))) {
-			wc_add_notice('Le nom ne peut pas être ' . $lastName, 'error');
-			return false;
-		}
-
-		if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $firstName)) {
-			wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
-			return false;
-		}
-
-		if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $lastName)) {
-			wc_add_notice('Le nom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
-			return false;
-		}
-
-		if ($firstName === $lastName) {
-			wc_add_notice('Le prénom et le nom ne peuvent pas être identiques', 'error');
-			return false;
-		}
 
 		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 			wc_add_notice('L\'email n\'est pas valide', 'error');
@@ -522,7 +474,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'payment_method' => 'helloasso'
 		));
 
-		helloasso_refresh_token_asso();
+		$bearerToken = helloasso_refresh_token_asso();
 		$order = wc_get_order($order_id);
 
 		if (!$order) {
@@ -796,7 +748,18 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				
 			)
 		);
-		$bearerToken = get_option('helloasso_access_token_asso');
+		if (!$bearerToken) {
+			$bearerToken = get_option('helloasso_access_token_asso');
+		}
+
+		if (!$bearerToken) {
+			helloasso_log_error('Aucun token HelloAsso disponible, paiement annulé', array(
+				'order_id' => $order_id
+			));
+			wc_add_notice('Une erreur est survenue lors du paiement, merci de réessayer.', 'error');
+			return array('result' => 'failure', 'messages' => 'Connexion à HelloAsso indisponible');
+		}
+
 		$isInTestMode = get_option('helloasso_testmode');
 
 		helloasso_log_info('Configuration API HelloAsso', array(
@@ -840,12 +803,38 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'response_body_length' => strlen($response_body),
 		));
 
+		if ($response_code === 401) {
+			helloasso_log_error('Token HelloAsso invalide (401), tentative de rafraîchissement forcé', array(
+				'order_id' => $order_id
+			));
+
+			$bearerToken = helloasso_refresh_token_asso(true);
+
+			if ($bearerToken) {
+				$response = wp_remote_post($url, helloasso_get_args_post_token($data, $bearerToken));
+
+				if (is_wp_error($response)) {
+					helloasso_log_error('Erreur lors du retry de l\'appel API HelloAsso', array(
+						'order_id' => $order_id,
+						'error' => $response->get_error_message()
+					));
+					wc_add_notice('Une erreur est survenue lors du paiement, merci de réessayer.', 'error');
+					return array('result' => 'failure', 'messages' => 'Erreur lors de la communication avec HelloAsso');
+				}
+
+				$response_body = wp_remote_retrieve_body($response);
+				$response_code = wp_remote_retrieve_response_code($response);
+			}
+		}
+
 		if ($response_code !== 200) {
 			helloasso_log_error('Erreur API HelloAsso', array(
 				'order_id' => $order_id,
 				'response_code' => $response_code,
 				'response_body' => $response_body
 			));
+			wc_add_notice('Une erreur est survenue lors du paiement, merci de réessayer.', 'error');
+			return array('result' => 'failure', 'messages' => 'Erreur lors de la communication avec HelloAsso');
 		}
 
 		$response_data = json_decode($response_body);
@@ -856,6 +845,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				'response_body' => $response_body,
 				'response_code' => $response_code
 			));
+			wc_add_notice('Une erreur est survenue lors du paiement, merci de réessayer.', 'error');
+			return array('result' => 'failure', 'messages' => 'Réponse invalide de HelloAsso');
 		}
 
 		helloasso_log_info('Paiement traité avec succès', array(
@@ -863,12 +854,11 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'redirect_url' => $response_data->redirectUrl ?? 'unknown'
 		));
 
-		
-			$order->save();
+		$order->save();
 
 		return array(
 			'result' => 'success',
-			'redirect' => json_decode($response_body)->redirectUrl
+			'redirect' => $response_data->redirectUrl
 		);
 	}
 }

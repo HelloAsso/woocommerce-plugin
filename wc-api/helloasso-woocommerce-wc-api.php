@@ -3,8 +3,10 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
-// Durée de validité du refresh token : 30 jours en secondes
-define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+// Durée de validité du refresh token : 29 jours en secondes (durée réelle confirmée côté HelloAsso)
+if (!defined('HELLOASSO_REFRESH_TOKEN_LIFETIME')) {
+	define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 29 * 24 * 60 * 60); // 2505600 secondes
+}
 
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 function helloasso_endpoint()
@@ -96,6 +98,7 @@ function helloasso_endpoint()
 		delete_option('helloasso_token_expires_in_asso');
 		delete_option('helloasso_refresh_token_expires_in_asso');
 		delete_option('helloasso_organization_slug');
+		delete_option('helloasso_connection_lost_asso');
 		add_option('helloasso_organization_slug', $data->organization_slug);
 		add_option('helloasso_access_token_asso', $data->access_token);
 		add_option('helloasso_refresh_token_asso', $data->refresh_token);

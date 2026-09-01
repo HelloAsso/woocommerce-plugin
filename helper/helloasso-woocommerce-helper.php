@@ -3,69 +3,83 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
-function helloasso_log($message, $level = 'info', $context = array())
-{
-	if (!function_exists('wc_get_logger')) {
-		return;
+if (!function_exists('helloasso_log')) {
+	function helloasso_log($message, $level = 'info', $context = array())
+	{
+		if (!function_exists('wc_get_logger')) {
+			return;
+		}
+
+		$logger = wc_get_logger();
+		$context['source'] = 'helloasso-woocommerce';
+		$context['timestamp'] = current_time('Y-m-d H:i:s');
+		$context['memory_usage'] = memory_get_usage(true);
+		$context['peak_memory'] = memory_get_peak_usage(true);
+
+		$log_message = sprintf(
+			'[%s] %s - %s',
+			strtoupper($level),
+			$message,
+			!empty($context) ? json_encode($context, JSON_UNESCAPED_UNICODE) : ''
+		);
+
+		$logger->log($level, $log_message, $context);
 	}
-
-	$logger = wc_get_logger();
-	$context['source'] = 'helloasso-woocommerce';
-	$context['timestamp'] = current_time('Y-m-d H:i:s');
-	$context['memory_usage'] = memory_get_usage(true);
-	$context['peak_memory'] = memory_get_peak_usage(true);
-
-	$log_message = sprintf(
-		'[%s] %s - %s',
-		strtoupper($level),
-		$message,
-		!empty($context) ? json_encode($context, JSON_UNESCAPED_UNICODE) : ''
-	);
-
-	$logger->log($level, $log_message, $context);
 }
 
-function helloasso_log_error($message, $context = array())
-{
-	helloasso_log($message, 'error', $context);
-}
-
-function helloasso_log_info($message, $context = array())
-{
-	helloasso_log($message, 'info', $context);
-}
-
-function helloasso_log_debug($message, $context = array())
-{
-	helloasso_log($message, 'debug', $context);
-}
-
-function helloasso_log_warning($message, $context = array())
-{
-	helloasso_log($message, 'warning', $context);
-}
-
-function helloasso_generate_pkce()
-{
-	$randomBytes = random_bytes(32);
-	$codeVerifier = bin2hex($randomBytes);
-
-	if (get_option('helloasso_code_verifier')) {
-		update_option('helloasso_code_verifier', $codeVerifier);
-	} else {
-		add_option('helloasso_code_verifier', $codeVerifier);
+if (!function_exists('helloasso_log_error')) {
+	function helloasso_log_error($message, $context = array())
+	{
+		helloasso_log($message, 'error', $context);
 	}
+}
 
-	$codeChallenge = hash('sha256', $codeVerifier);
-	$codeChallenge = strtr(base64_encode(hex2bin($codeChallenge)), '+/', '-_');
-	$codeChallenge = rtrim($codeChallenge, '=');
+if (!function_exists('helloasso_log_info')) {
+	function helloasso_log_info($message, $context = array())
+	{
+		helloasso_log($message, 'info', $context);
+	}
+}
 
-	return $codeChallenge;
+if (!function_exists('helloasso_log_debug')) {
+	function helloasso_log_debug($message, $context = array())
+	{
+		helloasso_log($message, 'debug', $context);
+	}
+}
+
+if (!function_exists('helloasso_log_warning')) {
+	function helloasso_log_warning($message, $context = array())
+	{
+		helloasso_log($message, 'warning', $context);
+	}
+}
+
+if (!function_exists('helloasso_generate_pkce')) {
+	function helloasso_generate_pkce()
+	{
+		$randomBytes = random_bytes(32);
+		$codeVerifier = bin2hex($randomBytes);
+
+		if (get_option('helloasso_code_verifier')) {
+			update_option('helloasso_code_verifier', $codeVerifier);
+		} else {
+			add_option('helloasso_code_verifier', $codeVerifier);
+		}
+
+		$codeChallenge = hash('sha256', $codeVerifier);
+		$codeChallenge = strtr(base64_encode(hex2bin($codeChallenge)), '+/', '-_');
+		$codeChallenge = rtrim($codeChallenge, '=');
+
+		return $codeChallenge;
+	}
 }
 
 
-function helloasso_convert_country_code($country)
-{
+
+if (!function_exists('helloasso_convert_country_code')) {
+	function helloasso_convert_country_code($country)
+	{
 	$countries = array(
 		'AF' => 'AFG', //Afghanistan
 		'AX' => 'ALA', //&#197;land Islands
@@ -321,33 +335,36 @@ function helloasso_convert_country_code($country)
 	);
 
 	$iso_code = isset($countries[$country]) ? $countries[$country] : $country;
-	return $iso_code;
+		return $iso_code;
+	}
 }
 
-function helloasso_find_payment_type_recursive($array)
-{
-	$payment_type = 'one_time';
+if (!function_exists('helloasso_find_payment_type_recursive')) {
+	function helloasso_find_payment_type_recursive($array)
+	{
+		$payment_type = 'one_time';
 
-	if (!is_array($array)) {
-		return $payment_type;
-	}
-
-	if (isset($array['payment_type'])) {
-		return $array['payment_type'];
-	}
-
-	foreach ($array as $key => $value) {
-		if ($key === 'payment_type') {
-			return $value;
+		if (!is_array($array)) {
+			return $payment_type;
 		}
 
-		if (is_array($value)) {
-			$result = helloasso_find_payment_type_recursive($value);
-			if ($result !== 'one_time') {
-				return $result;
+		if (isset($array['payment_type'])) {
+			return $array['payment_type'];
+		}
+
+		foreach ($array as $key => $value) {
+			if ($key === 'payment_type') {
+				return $value;
+			}
+
+			if (is_array($value)) {
+				$result = helloasso_find_payment_type_recursive($value);
+				if ($result !== 'one_time') {
+					return $result;
+				}
 			}
 		}
-	}
 
-	return $payment_type;
+		return $payment_type;
+	}
 }
