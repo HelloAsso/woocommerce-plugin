@@ -15,7 +15,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	{		
 
 		helloasso_log_info('Initialisation du gateway HelloAsso', array(
-			'plugin_version' => '1.1.2',
+			'plugin_version' => '1.1.3',
 			'wc_version' => defined('WC_VERSION') ? WC_VERSION : 'unknown'
 		));
 
@@ -522,12 +522,20 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'payment_method' => 'helloasso'
 		));
 
-		helloasso_refresh_token_asso();
 		$order = wc_get_order($order_id);
 
 		if (!$order) {
 			helloasso_log_error('Commande introuvable', array('order_id' => $order_id));
 			return array('result' => 'failure', 'messages' => 'Commande introuvable');
+		}
+
+		$bearerToken = helloasso_refresh_token_asso();
+		if (!$bearerToken) {
+			helloasso_log_error('Impossible d\'obtenir un token association valide', array('order_id' => $order_id));
+			$order->add_order_note('Échec HelloAsso : token invalide ou expiré. Reconnectez le plugin dans WooCommerce → Réglages → Paiements → HelloAsso.');
+			$order->save();
+			wc_add_notice('Le paiement HelloAsso n\'est pas disponible pour le moment. Veuillez réessayer ou choisir un autre moyen de paiement.', 'error');
+			return array('result' => 'failure');
 		}
 
 		helloasso_log_info('Récupération des données client', array(
@@ -796,7 +804,6 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				
 			)
 		);
-		$bearerToken = get_option('helloasso_access_token_asso');
 		$isInTestMode = get_option('helloasso_testmode');
 
 		helloasso_log_info('Configuration API HelloAsso', array(
@@ -828,11 +835,15 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				'error' => $response->get_error_message(),
 				'error_code' => $response->get_error_code()
 			));
-			echo 'Erreur : ' . esc_html($response->get_error_message());
+			$order->add_order_note('Échec HelloAsso : erreur réseau lors de la création du paiement.');
+			$order->save();
+			wc_add_notice('Le paiement n\'a pas pu être initié. Veuillez réessayer.', 'error');
+			return array('result' => 'failure');
 		}
 
 		$response_body = wp_remote_retrieve_body($response);
 		$response_code = wp_remote_retrieve_response_code($response);
+		$response_data = json_decode($response_body);
 
 		helloasso_log_info('Réponse API HelloAsso reçue', array(
 			'order_id' => $order_id,
@@ -840,35 +851,28 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			'response_body_length' => strlen($response_body),
 		));
 
-		if ($response_code !== 200) {
+		if ($response_code !== 200 || !$response_data || empty($response_data->redirectUrl)) {
 			helloasso_log_error('Erreur API HelloAsso', array(
 				'order_id' => $order_id,
 				'response_code' => $response_code,
 				'response_body' => $response_body
 			));
-		}
-
-		$response_data = json_decode($response_body);
-
-		if (!$response_data || !isset($response_data->redirectUrl)) {
-			helloasso_log_error('Réponse API invalide', array(
-				'order_id' => $order_id,
-				'response_body' => $response_body,
-				'response_code' => $response_code
-			));
+			$order->add_order_note(sprintf('Échec HelloAsso : impossible de créer le paiement (HTTP %s).', $response_code));
+			$order->save();
+			wc_add_notice('Le paiement n\'a pas pu être initié. Veuillez réessayer.', 'error');
+			return array('result' => 'failure');
 		}
 
 		helloasso_log_info('Paiement traité avec succès', array(
 			'order_id' => $order_id,
-			'redirect_url' => $response_data->redirectUrl ?? 'unknown'
+			'redirect_url' => $response_data->redirectUrl
 		));
 
-		
-			$order->save();
+		$order->save();
 
 		return array(
 			'result' => 'success',
-			'redirect' => json_decode($response_body)->redirectUrl
+			'redirect' => $response_data->redirectUrl
 		);
 	}
 }
