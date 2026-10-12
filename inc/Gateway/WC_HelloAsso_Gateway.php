@@ -663,9 +663,11 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			);
 		}
 
+		$totalCents = (int) round($total * 100);
+
 		$data = array(
-			'totalAmount' => (int) round($total * 100),
-			'initialAmount' => (int) round($total * 100),
+			'totalAmount' => $totalCents,
+			'initialAmount' => $totalCents,
 			'itemName' => 'Commande Woocommerce ' . $woocommerceOrderId,
 			'backUrl' => $backUrlOrder,
 			'errorUrl' => $errorUrlOrder,
@@ -732,8 +734,6 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			$order->save();
 
 			if ($payment_type === 'three_times') {
-				$totalCents = (int) round($total * 100);
-
 				$secondAmount = (int) floor($totalCents / 3);
 				$thirdAmount = (int) floor($totalCents / 3);
 				$firstAmount = $totalCents - $secondAmount - $thirdAmount;
@@ -762,8 +762,6 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 					'third_amount' => $thirdAmount
 				));
 			} elseif ($payment_type === 'twelve_times') {
-				$totalCents = (int) round($total * 100);
-
 				$monthlyAmount = (int) floor($totalCents / 12);
 				$firstAmount = $totalCents - ($monthlyAmount * 11);
 
