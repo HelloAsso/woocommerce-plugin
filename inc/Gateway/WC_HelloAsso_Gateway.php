@@ -664,8 +664,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		}
 
 		$data = array(
-			'totalAmount' => $total * 100,
-			'initialAmount' => $total * 100,
+			'totalAmount' => (int) round($total * 100),
+			'initialAmount' => (int) round($total * 100),
 			'itemName' => 'Commande Woocommerce ' . $woocommerceOrderId,
 			'backUrl' => $backUrlOrder,
 			'errorUrl' => $errorUrlOrder,
@@ -732,10 +732,10 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			$order->save();
 
 			if ($payment_type === 'three_times') {
-				$totalCents = round($total * 100);
+				$totalCents = (int) round($total * 100);
 
-				$secondAmount = floor($totalCents / 3);
-				$thirdAmount = floor($totalCents / 3);
+				$secondAmount = (int) floor($totalCents / 3);
+				$thirdAmount = (int) floor($totalCents / 3);
 				$firstAmount = $totalCents - $secondAmount - $thirdAmount;
 
 				$today = new \DateTime();
@@ -762,9 +762,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 					'third_amount' => $thirdAmount
 				));
 			} elseif ($payment_type === 'twelve_times') {
-				$totalCents = round($total * 100);
+				$totalCents = (int) round($total * 100);
 
-				$monthlyAmount = floor($totalCents / 12);
+				$monthlyAmount = (int) floor($totalCents / 12);
 				$firstAmount = $totalCents - ($monthlyAmount * 11);
 
 				$data['initialAmount'] = $firstAmount;
