@@ -3,6 +3,10 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
+if (!defined('HELLOASSO_REFRESH_TOKEN_LIFETIME')) {
+	define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
+}
+
 function helloasso_log($message, $level = 'info', $context = array())
 {
 	if (!function_exists('wc_get_logger')) {

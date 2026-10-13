@@ -5,7 +5,7 @@ Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2.34
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -95,6 +95,13 @@ Please report security bugs found in the source code of the helloasso plugin thr
 [youtube https://www.youtube.com/watch?v=yrv1_PIakac]
 
 == Changelog ==
+
+= 1.1.3 =
+
+* Fix page blanche au checkout quand le token HelloAsso est expiré
+* Le refresh token n'est plus consommé à chaque paiement
+* Verrou pour éviter deux refresh simultanés (cron + checkout)
+* Cron de renouvellement du token via Action Scheduler (toutes les heures)
 
 = 1.1.2 =
 

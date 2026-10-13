@@ -3,9 +3,6 @@ if (! defined('ABSPATH')) {
 	exit; //Exit if accessed directly
 }
 
-// Durée de validité du refresh token : 30 jours en secondes
-define('HELLOASSO_REFRESH_TOKEN_LIFETIME', 30 * 24 * 60 * 60); // 2592000 secondes
-
 add_action('woocommerce_api_helloasso', 'helloasso_endpoint');
 function helloasso_endpoint()
 {
@@ -261,10 +258,8 @@ function validate_order($orderId, $checkoutIntentId)
 		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
 	}
 
-	helloasso_refresh_token_asso();
-
+	$helloasso_access_token_asso = helloasso_refresh_token_asso();
 	$slug = get_option('helloasso_organization_slug');
-	$helloasso_access_token_asso = get_option('helloasso_access_token_asso');
 
 	helloasso_log_info('Récupération des détails de la commande HelloAsso', array(
 		'order_id' => $orderId,
@@ -272,6 +267,13 @@ function validate_order($orderId, $checkoutIntentId)
 		'api_url' => $api_url,
 		'has_token' => !empty($helloasso_access_token_asso)
 	));
+
+	if (!$helloasso_access_token_asso) {
+		helloasso_log_error('Impossible de valider la commande : token association manquant', array(
+			'order_id' => $orderId
+		));
+		return $order;
+	}
 
 	$url = $api_url . 'v5/organizations/' . $slug . '/checkout-intents/' . $checkoutIntentId;
 	$response = wp_remote_request($url, helloasso_get_args_get_token($helloasso_access_token_asso));
