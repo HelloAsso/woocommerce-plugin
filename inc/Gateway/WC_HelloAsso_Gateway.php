@@ -437,9 +437,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				wc_add_notice('La commande ne peut être finalisé', 'error');
 			}
 
-			$firstName = sanitize_text_field($_POST['billing_first_name']);
-			$lastName = sanitize_text_field($_POST['billing_last_name']);
-			$email = sanitize_text_field($_POST['billing_email']);
+			$firstName = sanitize_text_field(wp_unslash($_POST['billing_first_name']));
+			$lastName = sanitize_text_field(wp_unslash($_POST['billing_last_name']));
+			$email = sanitize_text_field(wp_unslash($_POST['billing_email']));
 		} else {
 			// GET request payload json
 			$json = file_get_contents('php://input');
@@ -450,6 +450,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			$lastName = $data['billing_address']['last_name'];
 			$email = $data['billing_address']['email'];
 		}
+
+		$firstName = $this->normalize_payer_name($firstName);
+		$lastName = $this->normalize_payer_name($lastName);
 
 		if (preg_match('/(.)\1{2,}/', $firstName)) {
 			wc_add_notice('Le prénom ne doit pas contenir 3 caractères répétitifs', 'error');
@@ -471,37 +474,45 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			return false;
 		}
 
-		if (preg_match('/[aeiouy]/i', $firstName) === 0) {
+		// remove_accents() pour que les voyelles accentuées (é, ô, ý...) comptent comme des voyelles
+		if (preg_match('/[aeiouy]/i', remove_accents($firstName)) === 0) {
 			wc_add_notice('Le prénom doit contenir au moins une voyelle', 'error');
 			return false;
 		}
 
-		if (preg_match('/[aeiouy]/i', $lastName) === 0) {
+		if (preg_match('/[aeiouy]/i', remove_accents($lastName)) === 0) {
 			wc_add_notice('Le nom doit contenir au moins une voyelle', 'error');
 			return false;
 		}
 
-		if (in_array($firstName, array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test'))) {
+		$forbiddenNames = array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test');
+		$lowerFirstName = wc_strtolower($firstName);
+		$lowerLastName = wc_strtolower($lastName);
+
+		if (in_array($lowerFirstName, $forbiddenNames, true)) {
 			wc_add_notice('Le prénom ne peut pas être ' . $firstName, 'error');
 			return false;
 		}
 
-		if (in_array($lastName, array('firstname', 'lastname', 'unknown', 'first_name', 'last_name', 'anonyme', 'user', 'admin', 'name', 'nom', 'prénom', 'test'))) {
+		if (in_array($lowerLastName, $forbiddenNames, true)) {
 			wc_add_notice('Le nom ne peut pas être ' . $lastName, 'error');
 			return false;
 		}
 
-		if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $firstName)) {
+		// Lettres latines, accentuées comprises (hors × et ÷), ligatures œ/æ, apostrophe, espace et tiret
+		$forbiddenCharacters = '/[^a-zA-ZÀ-ÖØ-öø-ÿŒœŸ\' -]/u';
+
+		if (preg_match($forbiddenCharacters, $firstName)) {
 			wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 			return false;
 		}
 
-		if (preg_match('/![a-zA-ZéèêëáàâäúùûüçÇ\'-]/', $lastName)) {
+		if (preg_match($forbiddenCharacters, $lastName)) {
 			wc_add_notice('Le nom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
 			return false;
 		}
 
-		if ($firstName === $lastName) {
+		if ($lowerFirstName === $lowerLastName) {
 			wc_add_notice('Le prénom et le nom ne peuvent pas être identiques', 'error');
 			return false;
 		}
@@ -512,6 +523,36 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		}
 
 		return true;
+	}
+
+	private function normalize_payer_name($name)
+	{
+		// Apostrophe typographique (insérée automatiquement par iOS/macOS) ramenée à l'apostrophe droite
+		return str_replace('’', '\'', trim((string) $name));
+	}
+
+	private function get_api_error_message($response_data)
+	{
+		if (!is_object($response_data) || empty($response_data->errors)) {
+			return '';
+		}
+
+		// errors peut être une liste d'objets {code, message} ou un objet {champ: [messages]}
+		foreach ((array) $response_data->errors as $error) {
+			if (is_object($error)) {
+				$message = isset($error->message) ? $error->message : '';
+			} elseif (is_array($error)) {
+				$message = reset($error);
+			} else {
+				$message = $error;
+			}
+
+			if (is_string($message) && trim($message) !== '') {
+				return sanitize_text_field($message);
+			}
+		}
+
+		return '';
 	}
 
 	public function process_payment($order_id)
@@ -568,49 +609,49 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 				}
 
 				if (isset($_POST['billing_first_name'])) {
-					$firstName = sanitize_text_field($_POST['billing_first_name']);
+					$firstName = sanitize_text_field(wp_unslash($_POST['billing_first_name']));
 				} else {
 					$firstName = '';
 				}
 
 				if (isset($_POST['billing_last_name'])) {
-					$lastName = sanitize_text_field($_POST['billing_last_name']);
+					$lastName = sanitize_text_field(wp_unslash($_POST['billing_last_name']));
 				} else {
 					$lastName = '';
 				}
 
 				if (isset($_POST['billing_email'])) {
-					$email = sanitize_text_field($_POST['billing_email']);
+					$email = sanitize_text_field(wp_unslash($_POST['billing_email']));
 				} else {
 					$email = '';
 				}
 
 				if (isset($_POST['billing_address_1'])) {
-					$adress = sanitize_text_field($_POST['billing_address_1']);
+					$adress = sanitize_text_field(wp_unslash($_POST['billing_address_1']));
 				} else {
 					$adress = '';
 				}
 
 				if (isset($_POST['billing_city'])) {
-					$city = sanitize_text_field($_POST['billing_city']);
+					$city = sanitize_text_field(wp_unslash($_POST['billing_city']));
 				} else {
 					$city = '';
 				}
 
 				if (isset($_POST['billing_postcode'])) {
-					$zipCode = sanitize_text_field($_POST['billing_postcode']);
+					$zipCode = sanitize_text_field(wp_unslash($_POST['billing_postcode']));
 				} else {
 					$zipCode = '';
 				}
 
 				if (isset($_POST['billing_country'])) {
-					$countryIso = helloasso_convert_country_code(sanitize_text_field($_POST['billing_country']));
+					$countryIso = helloasso_convert_country_code(sanitize_text_field(wp_unslash($_POST['billing_country'])));
 				} else {
 					$countryIso = '';
 				}
 
 				if (isset($_POST['billing_company'])) {
-					$company = sanitize_text_field($_POST['billing_company']);
+					$company = sanitize_text_field(wp_unslash($_POST['billing_company']));
 				} else {
 					$company = '';
 				}
@@ -643,6 +684,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			}
 		}
 
+		$firstName = $this->normalize_payer_name($firstName);
+		$lastName = $this->normalize_payer_name($lastName);
 
 		$items = $order->get_items();
 		$total = $order->get_total();
@@ -857,7 +900,10 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			));
 			$order->add_order_note(sprintf('Échec HelloAsso : impossible de créer le paiement (HTTP %s).', $response_code));
 			$order->save();
-			wc_add_notice('Le paiement n\'a pas pu être initié. Veuillez réessayer.', 'error');
+
+			// Une erreur de validation (ex : nom du payeur refusé) est exploitable par le donateur, on la lui remonte
+			$api_error_message = in_array($response_code, array(400, 422), true) ? $this->get_api_error_message($response_data) : '';
+			wc_add_notice($api_error_message ?: 'Le paiement n\'a pas pu être initié. Veuillez réessayer.', 'error');
 			return array('result' => 'failure');
 		}
 
