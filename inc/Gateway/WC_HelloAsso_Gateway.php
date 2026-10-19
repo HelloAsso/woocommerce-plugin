@@ -840,9 +840,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		$order->add_order_note(
 			sprintf(
 				'Paiement HelloAsso initié.<br> Type: %s',
-				$payment_type_translated,
-				
-				
+				$payment_type_translated
 			)
 		);
 		$isInTestMode = get_option('helloasso_testmode');
