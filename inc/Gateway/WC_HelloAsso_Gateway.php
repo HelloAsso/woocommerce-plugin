@@ -294,7 +294,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 					url: "' . esc_js(get_site_url()) . '/wc-api/helloasso_deco",
 					type: "POST",
 					data: {
-						action: "helloasso_deco"
+						action: "helloasso_deco",
+						nonce: "' . esc_js(wp_create_nonce('helloasso_deco')) . '"
 					},
 					success: function(data) {
 						console.log(data);

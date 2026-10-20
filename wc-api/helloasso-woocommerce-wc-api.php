@@ -162,6 +162,15 @@ function helloasso_endpoint()
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
 function helloasso_endpoint_deco()
 {
+	// Réservé aux gestionnaires de la boutique, via le lien de l'admin (nonce créé dans admin_options())
+	if (!current_user_can('manage_woocommerce') || !isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'helloasso_deco')) {
+		helloasso_log_warning('Déconnexion HelloAsso refusée : droits ou nonce invalides', array(
+			'user_id' => get_current_user_id()
+		));
+		echo wp_json_encode(array('success' => false, 'message' => 'La déconnexion de HelloAsso a échoué. Rechargez la page et réessayez.'));
+		exit;
+	}
+
 	$gateway_settings = get_option('woocommerce_helloasso_settings', array());
 	$gateway_settings['enabled'] = 'no';
 	$gateway_settings['multi_3_enabled'] = 'no';
