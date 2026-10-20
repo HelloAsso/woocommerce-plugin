@@ -42,7 +42,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 	{
 		if ($this->description) {
 			echo '<div style="display: flex; align-items: center;">';
-			echo '<img style="max-width: 50px; height:auto; margin-right: 16px;" src="/wp-content/plugins/helloasso-payments-for-woocommerce/assets/logo-ha.png" alt="HelloAsso Logo" />';
+			echo '<img style="max-width: 50px; height:auto; margin-right: 16px;" src="' . esc_url(HELLOASSO_PLUGIN_URL . 'assets/logo-ha.png') . '" alt="HelloAsso Logo" />';
 			echo '<p>' . wp_kses_post($this->description) . '</p>';
 			echo '</div>';
 		}
@@ -87,7 +87,12 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			$this->isConnected = true;
 		}
 
-		if (isset($_GET['nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
+		// Après une déconnexion volontaire, on la confirme au lieu d'afficher les messages de connexion restés dans l'URL
+		if (!$this->isConnected && isset($_GET['deconnect']) && 'success' === $_GET['deconnect']) {
+			echo '<div class="notice notice-success is-dismissible">
+				<p>Déconnexion de HelloAsso réussie.</p>
+				</div>';
+		} elseif (isset($_GET['nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'helloasso_connect')) {
 
 			if (isset($_GET['msg'])) {
 				$msg = sanitize_text_field($_GET['msg']);
@@ -295,7 +300,9 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 						console.log(data);
 						var data = JSON.parse(data);
 						if (data.success) {
-							location.reload();
+							var url = new URL(window.location.href);
+							url.searchParams.set("deconnect", "success");
+							window.location.replace(url.toString());
 						} else {
 							alert(data.message);
 						}

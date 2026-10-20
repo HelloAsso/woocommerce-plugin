@@ -82,6 +82,15 @@ function helloasso_endpoint()
 	$response_body = wp_remote_retrieve_body($response);
 	$data = json_decode($response_body);
 
+	// Réponse 200 inexploitable : on renvoie vers les réglages avec une erreur plutôt qu'une page blanche
+	if (!is_object($data) || empty($data->access_token) || !is_string($data->access_token)) {
+		helloasso_log_error('Réponse OAuth2 invalide : access_token absent', array(
+			'response_body_length' => strlen($response_body)
+		));
+		wp_safe_redirect(get_site_url() . '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=helloasso&msg=error_connect&nonce=' . $nonce);
+		exit;
+	}
+
 	if (isset($data->access_token)) {
 		helloasso_log_info('Token OAuth2 reçu avec succès', array(
 			'organization_slug' => $data->organization_slug ?? 'unknown',
@@ -184,30 +193,58 @@ function helloasso_endpoint_webhook()
 	$raw_input = file_get_contents('php://input');
 	$data = json_decode($raw_input, true);
 
+	if (!is_array($data)) {
+		helloasso_log_error('Payload webhook invalide', array(
+			'raw_data_length' => strlen($raw_input)
+		));
+		exit;
+	}
+
+	$event_type = isset($data['eventType']) && is_string($data['eventType']) ? $data['eventType'] : 'unknown';
+
 	helloasso_log_info('Webhook HelloAsso reçu', array(
-		'event_type' => $data['eventType'] ?? 'unknown',
+		'event_type' => $event_type,
 		'raw_data_length' => strlen($raw_input)
 	));
 
 	add_option('helloasso_webhook_data', wp_json_encode($data));
 
-	if ('Order' === $data['eventType']) {
+	if ('Order' === $event_type) {
+		// La référence (id de la commande) et le checkoutIntentId arrivent en entiers : on accepte tout scalaire
+		$reference = isset($data['metadata']['reference']) && is_scalar($data['metadata']['reference']) ? (string) $data['metadata']['reference'] : '';
+		$checkout_intent_id = isset($data['data']['checkoutIntentId']) && is_scalar($data['data']['checkoutIntentId']) ? (string) $data['data']['checkoutIntentId'] : '';
+
 		helloasso_log_info('Traitement d\'un événement Order', array(
-			'order_reference' => $data['metadata']['reference'] ?? 'unknown',
-			'checkout_intent_id' => $data['data']['checkoutIntentId'] ?? 'unknown'
+			'order_reference' => '' !== $reference ? $reference : 'unknown',
+			'checkout_intent_id' => '' !== $checkout_intent_id ? $checkout_intent_id : 'unknown'
 		));
-		validate_order($data['metadata']['reference'], $data['data']['checkoutIntentId']);
-	} else if ('Organization' === $data['eventType']) {
+
+		if ('' === $reference || '' === $checkout_intent_id) {
+			helloasso_log_error('Webhook Order incomplet : référence ou checkoutIntentId manquant');
+			exit;
+		}
+
+		validate_order($reference, $checkout_intent_id);
+	} else if ('Organization' === $event_type) {
+		$new_slug = isset($data['data']['new_slug_organization']) && is_string($data['data']['new_slug_organization']) ? $data['data']['new_slug_organization'] : '';
+
 		helloasso_log_info('Traitement d\'un événement Organization', array(
-			'new_slug' => $data['data']['new_slug_organization'] ?? 'unknown'
+			'new_slug' => '' !== $new_slug ? $new_slug : 'unknown'
 		));
+
+		// Sans nouveau slug, on garde l'actuel plutôt que de l'effacer
+		if ('' === $new_slug) {
+			helloasso_log_error('Webhook Organization incomplet : nouveau slug manquant');
+			exit;
+		}
+
 		delete_option('helloasso_organization_slug');
-		add_option('helloasso_organization_slug', $data['data']['new_slug_organization']);
+		add_option('helloasso_organization_slug', $new_slug);
 
 		helloasso_refresh_token_asso();
 	} else {
 		helloasso_log_warning('Événement webhook non reconnu', array(
-			'event_type' => $data['eventType'] ?? 'unknown'
+			'event_type' => $event_type
 		));
 	}
 

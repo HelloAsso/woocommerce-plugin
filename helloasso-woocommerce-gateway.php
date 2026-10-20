@@ -35,6 +35,9 @@ require_once('cron/helloasso-woocommerce-cron.php');
 require_once('helloasso-api/helloasso-woocommerce-api.php');
 require_once('wc-api/helloasso-woocommerce-wc-api.php');
 
+// URL du dossier du plugin, quel que soit l'emplacement de WordPress ou le nom du dossier
+define('HELLOASSO_PLUGIN_URL', plugin_dir_url(__FILE__));
+
 
 function helloasso_declare_cart_checkout_blocks_compatibility()
 {
@@ -131,6 +134,3 @@ function helloasso_deactivate()
 		as_unschedule_all_actions('helloasso_refresh_token_action', array(), 'helloasso');
 	}
 }
-
-add_action('wp_ajax_helloasso_deco', 'helloasso_deco');
-
