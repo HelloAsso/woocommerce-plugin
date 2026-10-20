@@ -247,10 +247,27 @@ function helloasso_endpoint_webhook()
 			exit;
 		}
 
+		// Le slug finit dans les URL de l'API : lettres, chiffres, tirets et underscores uniquement
+		if (!preg_match('/^[a-z0-9_-]+$/i', $new_slug)) {
+			helloasso_log_error('Webhook Organization ignoré : slug invalide', array('new_slug' => $new_slug));
+			exit;
+		}
+
+		if (get_option('helloasso_organization_slug') === $new_slug) {
+			helloasso_log_info('Webhook Organization : slug déjà à jour', array('new_slug' => $new_slug));
+			exit;
+		}
+
+		// Le webhook n'est pas authentifié : le nouveau slug n'est enregistré qu'une fois confirmé par l'API
+		if (!helloasso_confirm_organization_slug($new_slug)) {
+			helloasso_log_error('Webhook Organization ignoré : nouveau slug non confirmé par HelloAsso', array('new_slug' => $new_slug));
+			exit;
+		}
+
 		delete_option('helloasso_organization_slug');
 		add_option('helloasso_organization_slug', $new_slug);
 
-		helloasso_refresh_token_asso();
+		helloasso_log_info('Slug de l\'association mis à jour', array('new_slug' => $new_slug));
 	} else {
 		helloasso_log_warning('Événement webhook non reconnu', array(
 			'event_type' => $event_type
@@ -258,6 +275,47 @@ function helloasso_endpoint_webhook()
 	}
 
 	exit;
+}
+
+// Confirme qu'un slug désigne l'association liée : réenregistrer l'URL de notification sur ce slug
+// (même appel qu'à la connexion) demande le rôle OrganizationAdmin, que seul le token de cette association possède
+function helloasso_confirm_organization_slug($slug)
+{
+	$access_token = helloasso_refresh_token_asso();
+	if (!$access_token) {
+		helloasso_log_error('Impossible de confirmer le slug : token association manquant');
+		return false;
+	}
+
+	if ('yes' === get_option('helloasso_testmode')) {
+		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
+	} else {
+		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
+	}
+
+	$dataNotifSend = array(
+		'url' => get_site_url() . '/wc-api/helloasso_webhook'
+	);
+
+	$response = wp_remote_request($api_url . 'v5/partners/me/api-notifications/organizations/' . $slug, helloasso_get_args_put_token($dataNotifSend, $access_token));
+
+	if (is_wp_error($response)) {
+		helloasso_log_error('Erreur réseau lors de la confirmation du slug', array(
+			'error' => $response->get_error_message()
+		));
+		return false;
+	}
+
+	$status_code = wp_remote_retrieve_response_code($response);
+	if (200 !== $status_code) {
+		helloasso_log_error('Slug refusé par l\'API HelloAsso', array(
+			'new_slug' => $slug,
+			'status_code' => $status_code
+		));
+		return false;
+	}
+
+	return true;
 }
 
 add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
