@@ -288,6 +288,15 @@ function validate_order($orderId, $checkoutIntentId)
 		'order_total' => $order->get_total()
 	));
 
+	// L'id finit dans l'URL de l'API : on n'accepte que des chiffres
+	if (!preg_match('/^\d+$/', (string) $checkoutIntentId)) {
+		helloasso_log_error('checkoutIntentId invalide lors de la validation', array(
+			'order_id' => $orderId,
+			'checkout_intent_id' => $checkoutIntentId
+		));
+		return $order;
+	}
+
 	$isInTestMode = get_option('helloasso_testmode');
 	if ('yes' === $isInTestMode) {
 		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
@@ -339,6 +348,23 @@ function validate_order($orderId, $checkoutIntentId)
 		helloasso_log_error('Structure de réponse HelloAsso invalide', array(
 			'order_id' => $orderId,
 			'response_body' => $body
+		));
+		return $order;
+	}
+
+	// Le checkout intent doit avoir été créé pour cette commande (metadata.reference envoyée par process_payment())
+	// et porter sur son total. En 3 ou 12 fois, order.amount.total reste le total de toutes les échéances.
+	$checkout_reference = isset($haOrder->metadata->reference) && is_scalar($haOrder->metadata->reference) ? (string) $haOrder->metadata->reference : '';
+	$checkout_total = isset($haOrder->order->amount->total) && is_numeric($haOrder->order->amount->total) ? (int) $haOrder->order->amount->total : null;
+	$order_total = (int) round((float) $order->get_total() * 100);
+
+	if ($checkout_reference !== (string) $order->get_id() || $checkout_total !== $order_total) {
+		helloasso_log_error('Paiement HelloAsso ne correspondant pas à la commande, validation ignorée', array(
+			'order_id' => $orderId,
+			'checkout_intent_id' => $checkoutIntentId,
+			'checkout_reference' => $checkout_reference,
+			'checkout_total' => $checkout_total,
+			'order_total' => $order_total
 		));
 		return $order;
 	}
