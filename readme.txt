@@ -98,7 +98,7 @@ Please report security bugs found in the source code of the helloasso plugin thr
 
 = 1.1.5 =
 
-* Fix de la validation du nom et du prénom du payeur : accents (Benoît, Lecœur…), apostrophes (y compris ’ saisie sur iPhone et Mac) et espaces acceptés, caractères spéciaux et noms génériques (TEST, Admin…) refusés quelle que soit la casse
+* Fix de la validation du nom et du prénom du payeur : toutes les lettres de l'alphabet latin (Benoît, Lecœur, Łukasz, Nguyễn…), les différentes apostrophes (dont ’ saisie sur iPhone et Mac) et les espaces sont acceptés ; caractères spéciaux et noms génériques (TEST, Admin…) refusés quelle que soit la casse
 * Fix des informations du payeur envoyées à HelloAsso : plus d'antislash devant les apostrophes (nom, email, adresse)
 * Le message d'erreur renvoyé par HelloAsso est affiché au client quand le paiement ne peut pas être créé
 * Renforcement de la sécurité de la validation des paiements, de la déconnexion et des notifications HelloAsso

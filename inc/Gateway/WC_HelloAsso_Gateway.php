@@ -395,6 +395,7 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 		delete_option('helloasso_state');
 		delete_option('helloasso_authorization_url');
 		delete_option('helloasso_organization_slug');
+		delete_option('helloasso_pending_organization_slug');
 		delete_option('helloasso_access_token_asso');
 		delete_option('helloasso_refresh_token_asso');
 		delete_option('helloasso_token_expires_in_asso');
@@ -507,8 +508,8 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 			return false;
 		}
 
-		// Lettres latines, accentuées comprises (hors × et ÷), ligatures œ/æ, apostrophe, espace et tiret
-		$forbiddenCharacters = '/[^a-zA-ZÀ-ÖØ-öø-ÿŒœŸ\' -]/u';
+		// Toutes les lettres de l'alphabet latin (é, œ, Ł, Ş, Đ, ễ…) et les accents combinants, apostrophe, espace et tiret
+		$forbiddenCharacters = '/[^\p{Latin}\p{M}\' -]/u';
 
 		if (preg_match($forbiddenCharacters, $firstName)) {
 			wc_add_notice('Le prénom ne doit pas contenir de caractères spéciaux ni de caractères n\'appartenant pas à l\'alphabet latin', 'error');
@@ -535,8 +536,18 @@ class WC_HelloAsso_Gateway extends \WC_Payment_Gateway
 
 	private function normalize_payer_name($name)
 	{
-		// Apostrophe typographique (insérée automatiquement par iOS/macOS) ramenée à l'apostrophe droite
-		return str_replace('’', '\'', trim((string) $name));
+		$name = trim((string) $name);
+
+		// Accents décomposés (é = e + accent, fréquent en copier-coller depuis macOS) recomposés si l'extension intl est là
+		if (class_exists('Normalizer')) {
+			$normalized = \Normalizer::normalize($name, \Normalizer::FORM_C);
+			if (is_string($normalized)) {
+				$name = $normalized;
+			}
+		}
+
+		// Variantes d'apostrophe (’ inséré par iOS/macOS, ‘, ʼ, ´, `) ramenées à l'apostrophe droite
+		return str_replace(array('’', '‘', 'ʼ', '´', '`'), '\'', $name);
 	}
 
 	private function get_api_error_message($response_data)
