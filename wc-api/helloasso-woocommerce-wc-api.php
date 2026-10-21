@@ -162,6 +162,15 @@ function helloasso_endpoint()
 add_action('woocommerce_api_helloasso_deco', 'helloasso_endpoint_deco');
 function helloasso_endpoint_deco()
 {
+	// Réservé aux gestionnaires de la boutique, via le lien de l'admin (nonce créé dans admin_options())
+	if (!current_user_can('manage_woocommerce') || !isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'helloasso_deco')) {
+		helloasso_log_warning('Déconnexion HelloAsso refusée : droits ou nonce invalides', array(
+			'user_id' => get_current_user_id()
+		));
+		echo wp_json_encode(array('success' => false, 'message' => 'La déconnexion de HelloAsso a échoué. Rechargez la page et réessayez.'));
+		exit;
+	}
+
 	$gateway_settings = get_option('woocommerce_helloasso_settings', array());
 	$gateway_settings['enabled'] = 'no';
 	$gateway_settings['multi_3_enabled'] = 'no';
@@ -238,10 +247,27 @@ function helloasso_endpoint_webhook()
 			exit;
 		}
 
+		// Le slug finit dans les URL de l'API : lettres, chiffres, tirets et underscores uniquement
+		if (!preg_match('/^[a-z0-9_-]+$/i', $new_slug)) {
+			helloasso_log_error('Webhook Organization ignoré : slug invalide', array('new_slug' => $new_slug));
+			exit;
+		}
+
+		if (get_option('helloasso_organization_slug') === $new_slug) {
+			helloasso_log_info('Webhook Organization : slug déjà à jour', array('new_slug' => $new_slug));
+			exit;
+		}
+
+		// Le webhook n'est pas authentifié : le nouveau slug n'est enregistré qu'une fois confirmé par l'API
+		if (!helloasso_confirm_organization_slug($new_slug)) {
+			helloasso_log_error('Webhook Organization ignoré : nouveau slug non confirmé par HelloAsso', array('new_slug' => $new_slug));
+			exit;
+		}
+
 		delete_option('helloasso_organization_slug');
 		add_option('helloasso_organization_slug', $new_slug);
 
-		helloasso_refresh_token_asso();
+		helloasso_log_info('Slug de l\'association mis à jour', array('new_slug' => $new_slug));
 	} else {
 		helloasso_log_warning('Événement webhook non reconnu', array(
 			'event_type' => $event_type
@@ -249,6 +275,47 @@ function helloasso_endpoint_webhook()
 	}
 
 	exit;
+}
+
+// Confirme qu'un slug désigne l'association liée : réenregistrer l'URL de notification sur ce slug
+// (même appel qu'à la connexion) demande le rôle OrganizationAdmin, que seul le token de cette association possède
+function helloasso_confirm_organization_slug($slug)
+{
+	$access_token = helloasso_refresh_token_asso();
+	if (!$access_token) {
+		helloasso_log_error('Impossible de confirmer le slug : token association manquant');
+		return false;
+	}
+
+	if ('yes' === get_option('helloasso_testmode')) {
+		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_TEST;
+	} else {
+		$api_url = HELLOASSO_WOOCOMMERCE_API_URL_PROD;
+	}
+
+	$dataNotifSend = array(
+		'url' => get_site_url() . '/wc-api/helloasso_webhook'
+	);
+
+	$response = wp_remote_request($api_url . 'v5/partners/me/api-notifications/organizations/' . $slug, helloasso_get_args_put_token($dataNotifSend, $access_token));
+
+	if (is_wp_error($response)) {
+		helloasso_log_error('Erreur réseau lors de la confirmation du slug', array(
+			'error' => $response->get_error_message()
+		));
+		return false;
+	}
+
+	$status_code = wp_remote_retrieve_response_code($response);
+	if (200 !== $status_code) {
+		helloasso_log_error('Slug refusé par l\'API HelloAsso', array(
+			'new_slug' => $slug,
+			'status_code' => $status_code
+		));
+		return false;
+	}
+
+	return true;
 }
 
 add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
@@ -287,6 +354,15 @@ function validate_order($orderId, $checkoutIntentId)
 		'order_status' => $order->get_status(),
 		'order_total' => $order->get_total()
 	));
+
+	// L'id finit dans l'URL de l'API : on n'accepte que des chiffres
+	if (!preg_match('/^\d+$/', (string) $checkoutIntentId)) {
+		helloasso_log_error('checkoutIntentId invalide lors de la validation', array(
+			'order_id' => $orderId,
+			'checkout_intent_id' => $checkoutIntentId
+		));
+		return $order;
+	}
 
 	$isInTestMode = get_option('helloasso_testmode');
 	if ('yes' === $isInTestMode) {
@@ -339,6 +415,23 @@ function validate_order($orderId, $checkoutIntentId)
 		helloasso_log_error('Structure de réponse HelloAsso invalide', array(
 			'order_id' => $orderId,
 			'response_body' => $body
+		));
+		return $order;
+	}
+
+	// Le checkout intent doit avoir été créé pour cette commande (metadata.reference envoyée par process_payment())
+	// et porter sur son total. En 3 ou 12 fois, order.amount.total reste le total de toutes les échéances.
+	$checkout_reference = isset($haOrder->metadata->reference) && is_scalar($haOrder->metadata->reference) ? (string) $haOrder->metadata->reference : '';
+	$checkout_total = isset($haOrder->order->amount->total) && is_numeric($haOrder->order->amount->total) ? (int) $haOrder->order->amount->total : null;
+	$order_total = (int) round((float) $order->get_total() * 100);
+
+	if ($checkout_reference !== (string) $order->get_id() || $checkout_total !== $order_total) {
+		helloasso_log_error('Paiement HelloAsso ne correspondant pas à la commande, validation ignorée', array(
+			'order_id' => $orderId,
+			'checkout_intent_id' => $checkoutIntentId,
+			'checkout_reference' => $checkout_reference,
+			'checkout_total' => $checkout_total,
+			'order_total' => $order_total
 		));
 		return $order;
 	}
