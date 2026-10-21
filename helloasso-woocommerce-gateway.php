@@ -117,6 +117,7 @@ function helloasso_deactivate()
 	delete_option('helloasso_state');
 	delete_option('helloasso_authorization_url');
 	delete_option('helloasso_organization_slug');
+	delete_option('helloasso_pending_organization_slug');
 	delete_option('helloasso_access_token_asso');
 	delete_option('helloasso_refresh_token_asso');
 	delete_option('helloasso_token_expires_in_asso');

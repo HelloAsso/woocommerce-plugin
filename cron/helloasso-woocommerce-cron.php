@@ -10,6 +10,10 @@ function hello_asso_cron_refresh_token()
 	}
 
 	helloasso_refresh_token_asso();
+
+	if (function_exists('helloasso_retry_pending_organization_slug')) {
+		helloasso_retry_pending_organization_slug();
+	}
 }
 
 function helloasso_is_timestamp($value)

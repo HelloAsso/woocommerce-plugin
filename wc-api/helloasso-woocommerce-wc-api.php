@@ -102,6 +102,7 @@ function helloasso_endpoint()
 		delete_option('helloasso_token_expires_in_asso');
 		delete_option('helloasso_refresh_token_expires_in_asso');
 		delete_option('helloasso_organization_slug');
+		delete_option('helloasso_pending_organization_slug');
 		add_option('helloasso_organization_slug', $data->organization_slug);
 		add_option('helloasso_access_token_asso', $data->access_token);
 		add_option('helloasso_refresh_token_asso', $data->refresh_token);
@@ -136,6 +137,7 @@ function helloasso_endpoint()
 			delete_option('helloasso_state');
 			delete_option('helloasso_authorization_url');
 			delete_option('helloasso_organization_slug');
+			delete_option('helloasso_pending_organization_slug');
 			delete_option('helloasso_access_token_asso');
 			delete_option('helloasso_refresh_token_asso');
 			delete_option('helloasso_token_expires_in_asso');
@@ -186,6 +188,7 @@ function helloasso_endpoint_deco()
 	delete_option('helloasso_state');
 	delete_option('helloasso_authorization_url');
 	delete_option('helloasso_organization_slug');
+	delete_option('helloasso_pending_organization_slug');
 	delete_option('helloasso_access_token_asso');
 	delete_option('helloasso_refresh_token_asso');
 	delete_option('helloasso_token_expires_in_asso');
@@ -259,15 +262,21 @@ function helloasso_endpoint_webhook()
 		}
 
 		// Le webhook n'est pas authentifié : le nouveau slug n'est enregistré qu'une fois confirmé par l'API
-		if (!helloasso_confirm_organization_slug($new_slug)) {
-			helloasso_log_error('Webhook Organization ignoré : nouveau slug non confirmé par HelloAsso', array('new_slug' => $new_slug));
+		$confirmation = helloasso_confirm_organization_slug($new_slug);
+
+		if ('retry' === $confirmation) {
+			// Échec passager (réseau, 5xx) : le cron horaire retentera la confirmation
+			update_option('helloasso_pending_organization_slug', array('slug' => $new_slug, 'since' => time()), false);
+			helloasso_log_warning('Webhook Organization : confirmation du slug reportée', array('new_slug' => $new_slug));
 			exit;
 		}
 
-		delete_option('helloasso_organization_slug');
-		add_option('helloasso_organization_slug', $new_slug);
+		if ('confirmed' !== $confirmation) {
+			helloasso_log_error('Webhook Organization ignoré : nouveau slug refusé par HelloAsso', array('new_slug' => $new_slug));
+			exit;
+		}
 
-		helloasso_log_info('Slug de l\'association mis à jour', array('new_slug' => $new_slug));
+		helloasso_apply_organization_slug($new_slug);
 	} else {
 		helloasso_log_warning('Événement webhook non reconnu', array(
 			'event_type' => $event_type
@@ -277,14 +286,50 @@ function helloasso_endpoint_webhook()
 	exit;
 }
 
+function helloasso_apply_organization_slug($slug)
+{
+	delete_option('helloasso_organization_slug');
+	add_option('helloasso_organization_slug', $slug);
+	delete_option('helloasso_pending_organization_slug');
+
+	helloasso_log_info('Slug de l\'association mis à jour', array('new_slug' => $slug));
+}
+
+// Appelé par le cron horaire : retente la confirmation d'un slug reporté après un échec passager
+function helloasso_retry_pending_organization_slug()
+{
+	$pending = get_option('helloasso_pending_organization_slug');
+	if (!is_array($pending) || empty($pending['slug']) || !is_string($pending['slug'])) {
+		return;
+	}
+
+	// Au-delà de 7 jours on abandonne : une reconnexion du plugin enregistre de toute façon le bon slug
+	$since = isset($pending['since']) ? (int) $pending['since'] : 0;
+	if (time() - $since > 7 * DAY_IN_SECONDS) {
+		delete_option('helloasso_pending_organization_slug');
+		helloasso_log_error('Confirmation du slug abandonnée après 7 jours', array('new_slug' => $pending['slug']));
+		return;
+	}
+
+	$confirmation = helloasso_confirm_organization_slug($pending['slug']);
+
+	if ('confirmed' === $confirmation) {
+		helloasso_apply_organization_slug($pending['slug']);
+	} elseif ('refused' === $confirmation) {
+		delete_option('helloasso_pending_organization_slug');
+		helloasso_log_error('Slug en attente refusé par HelloAsso', array('new_slug' => $pending['slug']));
+	}
+}
+
 // Confirme qu'un slug désigne l'association liée : réenregistrer l'URL de notification sur ce slug
-// (même appel qu'à la connexion) demande le rôle OrganizationAdmin, que seul le token de cette association possède
+// (même appel qu'à la connexion) demande le rôle OrganizationAdmin, que seul le token de cette association possède.
+// Renvoie 'confirmed', 'refused' (refus définitif de l'API) ou 'retry' (échec passager : réseau, 5xx, 429, token indisponible).
 function helloasso_confirm_organization_slug($slug)
 {
 	$access_token = helloasso_refresh_token_asso();
 	if (!$access_token) {
 		helloasso_log_error('Impossible de confirmer le slug : token association manquant');
-		return false;
+		return 'retry';
 	}
 
 	if ('yes' === get_option('helloasso_testmode')) {
@@ -303,19 +348,27 @@ function helloasso_confirm_organization_slug($slug)
 		helloasso_log_error('Erreur réseau lors de la confirmation du slug', array(
 			'error' => $response->get_error_message()
 		));
-		return false;
+		return 'retry';
 	}
 
-	$status_code = wp_remote_retrieve_response_code($response);
-	if (200 !== $status_code) {
-		helloasso_log_error('Slug refusé par l\'API HelloAsso', array(
+	$status_code = (int) wp_remote_retrieve_response_code($response);
+	if (200 === $status_code) {
+		return 'confirmed';
+	}
+
+	if ($status_code >= 500 || 429 === $status_code || 408 === $status_code) {
+		helloasso_log_error('Erreur temporaire de l\'API HelloAsso lors de la confirmation du slug', array(
 			'new_slug' => $slug,
 			'status_code' => $status_code
 		));
-		return false;
+		return 'retry';
 	}
 
-	return true;
+	helloasso_log_error('Slug refusé par l\'API HelloAsso', array(
+		'new_slug' => $slug,
+		'status_code' => $status_code
+	));
+	return 'refused';
 }
 
 add_action('woocommerce_api_helloasso_order', 'helloasso_endpoint_order');
