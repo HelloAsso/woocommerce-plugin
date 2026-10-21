@@ -5,7 +5,7 @@ Tags: helloasso, payment, association, don, billetterie
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2.34
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -95,6 +95,17 @@ Please report security bugs found in the source code of the helloasso plugin thr
 [youtube https://www.youtube.com/watch?v=yrv1_PIakac]
 
 == Changelog ==
+
+= 1.1.5 =
+
+* Fix de la validation du nom et du prénom du payeur : accents (Benoît, Lecœur…), apostrophes (y compris ’ saisie sur iPhone et Mac) et espaces acceptés, caractères spéciaux et noms génériques (TEST, Admin…) refusés quelle que soit la casse
+* Fix des informations du payeur envoyées à HelloAsso : plus d'antislash devant les apostrophes (nom, email, adresse)
+* Le message d'erreur renvoyé par HelloAsso est affiché au client quand le paiement ne peut pas être créé
+* Renforcement de la sécurité de la validation des paiements, de la déconnexion et des notifications HelloAsso
+* Fix de l'affichage du logo HelloAsso au checkout quand WordPress est installé dans un sous-dossier
+* Message de confirmation après la déconnexion du compte HelloAsso
+* Gestion plus robuste des notifications et des réponses de connexion invalides
+* Fix de compatibilité PHP 7.2
 
 = 1.1.4 =
 
