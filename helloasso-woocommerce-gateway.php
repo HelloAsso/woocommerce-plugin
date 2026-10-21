@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       HelloAsso Payments for WooCommerce
  * Description:       Recevez 100% de vos paiements gratuitement. HelloAsso est la seule solution de paiement gratuite du secteur associatif. Nous sommes financés librement par la solidarité de celles et ceux qui choisissent de laisser une contribution volontaire au moment du paiement à une association.
- * Version:           1.1.4
+ * Version:           1.1.5
  * Requires at least: 5.0
  * WC requires at least: 7.7
  * Requires PHP:      7.2.34
@@ -34,6 +34,9 @@ require_once('helper/helloasso-woocommerce-helper.php');
 require_once('cron/helloasso-woocommerce-cron.php');
 require_once('helloasso-api/helloasso-woocommerce-api.php');
 require_once('wc-api/helloasso-woocommerce-wc-api.php');
+
+// URL du dossier du plugin, quel que soit l'emplacement de WordPress ou le nom du dossier
+define('HELLOASSO_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 
 function helloasso_declare_cart_checkout_blocks_compatibility()
@@ -114,6 +117,7 @@ function helloasso_deactivate()
 	delete_option('helloasso_state');
 	delete_option('helloasso_authorization_url');
 	delete_option('helloasso_organization_slug');
+	delete_option('helloasso_pending_organization_slug');
 	delete_option('helloasso_access_token_asso');
 	delete_option('helloasso_refresh_token_asso');
 	delete_option('helloasso_token_expires_in_asso');
@@ -131,6 +135,3 @@ function helloasso_deactivate()
 		as_unschedule_all_actions('helloasso_refresh_token_action', array(), 'helloasso');
 	}
 }
-
-add_action('wp_ajax_helloasso_deco', 'helloasso_deco');
-
